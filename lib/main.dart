@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
-import 'package:waseembrayani/pages/auth/signup_screen.dart';
+import 'package:waseembrayani/pages/screens/app_main_screen.dart';
+// import 'package:waseembrayani/pages/auth/login_screen.dart';
+// import 'package:waseembrayani/pages/user/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +27,27 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: LoginScreen(),
+      home: AuthCheck(),
+    );
+  }
+}
+
+class AuthCheck extends StatelessWidget {
+  final supabase = Supabase.instance.client;
+  AuthCheck({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: supabase.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session = supabase.auth.currentSession;
+        if (session != null) {
+          return AppMainScreen();
+        } else {
+          return LoginScreen();
+        }
+      },
     );
   }
 }

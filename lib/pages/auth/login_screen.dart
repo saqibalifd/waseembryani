@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:waseembrayani/pages/auth/signup_screen.dart';
+import 'package:waseembrayani/pages/screens/app_main_screen.dart';
+import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/widgets/mybutton_widget.dart';
+import 'package:waseembrayani/widgets/snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,8 +13,39 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+
+  bool isLoading = false;
+  bool isPasswordHidden = true;
+
+  void _login() async {
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
+    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+    });
+
+    final result = await _authService.login(email, password);
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (result == null) {
+      // success case
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AppMainScreen()),
+      );
+      showSnackBar(context, 'Login successful');
+    } else {
+      showSnackBar(context, 'Login failed: $result');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,35 +61,47 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.maxFinite,
                 fit: BoxFit.cover,
               ),
+              const SizedBox(height: 20),
               TextField(
                 controller: emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: passwordController,
+                obscureText: isPasswordHidden,
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
-                    onPressed: () {},
-                    icon: Icon(Icons.visibility),
+                    onPressed: () {
+                      setState(() {
+                        isPasswordHidden = !isPasswordHidden;
+                      });
+                    },
+                    icon: Icon(
+                      isPasswordHidden
+                          ? Icons.visibility_off_sharp
+                          : Icons.visibility,
+                    ),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              SizedBox(
-                width: double.maxFinite,
-                child: MybuttonWidget(onTap: () {}, buttonText: 'Login'),
-              ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SizedBox(
+                      width: double.maxFinite,
+                      child: MybuttonWidget(onTap: _login, buttonText: 'Login'),
+                    ),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     "Don't have an account?",
                     style: TextStyle(fontSize: 18),
                   ),
@@ -63,11 +109,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => SignupScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const SignupScreen(),
+                        ),
                       );
                     },
-                    child: Text(
-                      'Signup here',
+                    child: const Text(
+                      ' Signup here',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
