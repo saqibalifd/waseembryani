@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/categories_model.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
-import 'package:waseembrayani/pages/screens/detail_screen.dart';
+import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/pages/screens/view_all_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
@@ -20,8 +20,10 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<CategoryModel>> futureCategories = fetchCategories();
   late Future<List<ProductModel>> futureFoodProducts = Future.value([]);
   late Future<List<ProductModel>> futurePopularProducts = Future.value([]);
+  late Future<List<UserModel>> futureUserInfo = Future.value([]);
   List<CategoryModel> categories = [];
   String? slectedCategorie;
+  final bool? isAdmin = false;
   @override
   void initState() {
     super.initState();
@@ -37,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
           slectedCategorie = categories.first.name;
           futureFoodProducts = fetchFoodProducts(slectedCategorie!);
           futurePopularProducts = fetchPopularProducts(slectedCategorie!);
+          futureUserInfo = fetchUserInfo();
         });
       }
     } catch (e) {
@@ -54,6 +57,24 @@ class _HomeScreenState extends State<HomeScreen> {
           .toList();
     } catch (e) {
       print('Error in fetching categories : $e');
+      return [];
+    }
+  }
+
+  Future<List<UserModel>> fetchUserInfo() async {
+    try {
+      final String userId = Supabase.instance.client.auth.currentUser!.id
+          .toString();
+      final data =
+          await Supabase.instance.client
+                  .from('users')
+                  .select()
+                  .eq('userid', userId)
+              as List<dynamic>;
+
+      return data.map((json) => UserModel.fromJson(json)).toList();
+    } catch (e) {
+      print('Error in fetching user info : $e');
       return [];
     }
   }
@@ -80,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
           .select()
           .eq('isPopular', true)
           .eq('categoryName', categoryName);
-      ;
       return (response as List)
           .map((json) => ProductModel.fromJson(json))
           .toList();
@@ -96,49 +116,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: Image.asset('assets/images/dice.png', height: 20, width: 20),
-        ),
-        centerTitle: true,
 
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                SizedBox(width: 20),
-                Text(
-                  'Bahgobahar, khanpur',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Icon(Icons.location_on_outlined, size: 14, color: red),
-                SizedBox(width: 5),
+      // this is app bar
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(
+          kToolbarHeight,
+        ), // standard AppBar height
+        child: FutureBuilder(
+          future: futureUserInfo,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data!.isEmpty) {
+              return Center(child: CircularProgressIndicator());
+            }
+            final data = snapshot.data!.first;
+            isAdmin == data.isAdmin;
 
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                  color: orange,
-                ),
-              ],
-            ),
-          ],
+            return _appBAr(data.adress, data.profileImage);
+          },
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage('assets/images/profile.jpg'),
-            ),
-          ),
-        ],
       ),
+
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
         child: Center(
@@ -147,13 +149,21 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 30),
+              //this is order now card
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: BannerCard(
                   firstText: 'The Fatest In Delivery',
                   secondText: ' Food',
                   button: MaterialButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ViewAllScreen(),
+                        ),
+                      );
+                    },
 
                     color: red,
                     height: 45,
@@ -173,10 +183,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 110,
                   ),
                 ),
-                //child: //
               ),
 
-              _heading('Categories', false, () {}),
+              _heading('Categories', true, () {}, isAdmin: isAdmin),
+              //categoryies list view
               Padding(
                 padding: const EdgeInsets.only(left: 20),
                 child: SizedBox(
@@ -215,42 +225,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             },
                             child: Padding(
                               padding: const EdgeInsets.only(right: 15),
-                              child: Container(
-                                height: 60,
-                                width: 130,
-                                decoration: BoxDecoration(
-                                  color: isSelected ? red : grey1,
-                                  borderRadius: BorderRadius.circular(50),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.network(
-                                      category.image,
-                                      height: 40,
-                                      width: 40,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              Icon(Icons.fastfood),
-                                    ),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      category.name ?? '',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Colors.black,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              child: catregoryCard(
+                                isSelected,
+                                category.image,
+                                category.name,
                               ),
                             ),
                           );
@@ -271,7 +249,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               }),
-              ////////////////
+              //popular now list view card
               Padding(
                 padding: const EdgeInsets.only(left: 20),
                 child: SizedBox(
@@ -300,33 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           final ProductModel passProduct =
                               snapshot.data![index];
-                          return ProductCard(
-                            onCardTap: () => Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                transitionDuration: Duration(seconds: 3),
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        DetailScreen(productModel: passProduct),
-                              ),
-                            ),
-                            isFavourite: true,
-                            image: Hero(
-                              tag: foodProduct[index].id.toString(),
-                              child: Image.network(
-                                foodProduct[index].imageUrl,
-                                height: 160,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Padding(
-                                      padding: const EdgeInsets.all(40.0),
-                                      child: Icon(Icons.fastfood, size: 80),
-                                    ),
-                              ),
-                            ),
-                            title: foodProduct[index].name,
-                            subtitle: foodProduct[index].categoryName,
-                            price: foodProduct[index].price.toString(),
-                          );
+                          return ProductCard(productModel: passProduct);
                         },
                       );
                     },
@@ -344,6 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               }),
+              //all product card
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: FutureBuilder(
@@ -375,32 +328,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         }
                         final ProductModel passProduct = snapshot.data![index];
-                        return ProductCard(
-                          onCardTap: () => Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                              transitionDuration: Duration(seconds: 1),
-                              pageBuilder:
-                                  (context, animation, secondaryAnimation) =>
-                                      DetailScreen(productModel: passProduct),
-                            ),
-                          ),
-                          image: Hero(
-                            tag: snapshot.data![index].id.toString(),
-                            child: Image.network(
-                              snapshot.data![index].imageUrl,
-                              height: 160,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Padding(
-                                    padding: const EdgeInsets.all(40.0),
-                                    child: Icon(Icons.fastfood, size: 80),
-                                  ),
-                            ),
-                          ),
-                          title: snapshot.data![index].name,
-                          subtitle: snapshot.data![index].categoryName,
-                          price: snapshot.data![index].price.toString(),
-                        );
+                        return ProductCard(productModel: passProduct);
                       },
                     );
                   },
@@ -414,7 +342,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-Widget _heading(String title, bool? isMoreButton, VoidCallback? onTap) {
+//custom widgets
+Widget _heading(
+  String title,
+  bool? isMoreButton,
+  VoidCallback? onTap, {
+  bool? isAdmin,
+}) {
   return Padding(
     padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
 
@@ -426,36 +360,135 @@ Widget _heading(String title, bool? isMoreButton, VoidCallback? onTap) {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         isMoreButton == true
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: orange,
-                    ),
-                  ),
-                  SizedBox(width: 5),
-                  GestureDetector(
-                    onTap: onTap,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: orange,
-                        borderRadius: BorderRadius.circular(10),
+            ? isAdmin == true
+                  ? GestureDetector(
+                      onTap: onTap,
+                      child: CircleAvatar(
+                        backgroundColor: red,
+                        radius: 20,
+                        child: Center(
+                          child: Icon(Icons.add, color: Colors.white),
+                        ),
                       ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'View All',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: orange,
+                          ),
+                        ),
+                        SizedBox(width: 5),
 
-                      child: Padding(
-                        padding: const EdgeInsets.all(2.0),
-                        child: Icon(Icons.navigate_next_rounded, size: 20),
-                      ),
-                    ),
-                  ),
-                ],
-              )
+                        GestureDetector(
+                          onTap: onTap,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: orange,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+
+                            child: Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: Icon(
+                                Icons.navigate_next_rounded,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
             : SizedBox(),
+      ],
+    ),
+  );
+}
+
+PreferredSizeWidget _appBAr(String adress, String profileImageUrl) {
+  return AppBar(
+    leading: Padding(
+      padding: const EdgeInsets.only(left: 10),
+      child: Image.asset(
+        'assets/images/appiconLogo.png',
+        height: 10,
+        width: 10,
+      ),
+    ),
+    centerTitle: true,
+    forceMaterialTransparency: true,
+    title: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            SizedBox(width: 20),
+            Text(
+              adress,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Icon(Icons.location_on_outlined, size: 14, color: red),
+            SizedBox(width: 5),
+
+            Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: orange),
+          ],
+        ),
+      ],
+    ),
+    actions: [
+      Padding(
+        padding: const EdgeInsets.only(right: 10),
+        child: CircleAvatar(
+          radius: 20,
+          backgroundImage: NetworkImage(profileImageUrl),
+        ),
+      ),
+    ],
+  );
+}
+
+Widget catregoryCard(
+  bool isSelected,
+  String categoryImage,
+  String categoryName,
+) {
+  return Container(
+    height: 60,
+    width: 130,
+    decoration: BoxDecoration(
+      color: isSelected ? red : grey1,
+      borderRadius: BorderRadius.circular(50),
+      border: Border.all(
+        color: isSelected ? Colors.white : Colors.transparent,
+        width: 2,
+      ),
+    ),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.network(
+          categoryImage,
+          height: 40,
+          width: 40,
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.fastfood),
+        ),
+        SizedBox(width: 5),
+        Text(
+          categoryName ?? '',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: isSelected ? Colors.white : Colors.black,
+          ),
+        ),
       ],
     ),
   );

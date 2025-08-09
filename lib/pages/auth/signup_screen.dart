@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:waseembrayani/pages/auth/login_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/widgets/mybutton_widget.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/pages/auth/login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -12,36 +13,50 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool isLoading = false;
-  bool isPasswordHindden = true;
-  void _login() async {
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
-    if (!email.contains('.com')) {
-      showSnackBar(context, 'Invalid Email,It must contain .com');
+  bool isPasswordHidden = true;
+
+  Future<void> _signUp() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final name = nameController.text.trim();
+    final address = addressController.text.trim();
+
+    // Validation
+    if (name.isEmpty) return showSnackBar(context, 'Please enter your name');
+    if (address.isEmpty)
+      return showSnackBar(context, 'Please enter your address');
+    if (!email.contains('@') || !email.contains('.')) {
+      return showSnackBar(context, 'Please enter a valid email address');
     }
-    setState(() {
-      isLoading = true;
-    });
-    final result = await _authService.login(email, password);
-    if (result == null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => SignupScreen()),
+    if (password.length < 6) {
+      return showSnackBar(context, 'Password must be at least 6 characters');
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      await _authService.signUp(
+        context: context,
+        email: email,
+        password: password,
+        name: name,
+        adress: address,
       );
-      //success case
-      setState(() {
-        isLoading = false;
-      });
-      showSnackBar(context, 'signup successfull');
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-      showSnackBar(context, 'Signup failed : $result');
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    } catch (e) {
+      showSnackBar(context, 'Error: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -60,58 +75,79 @@ class _SignupScreenState extends State<SignupScreen> {
                 width: double.maxFinite,
                 fit: BoxFit.cover,
               ),
+              const SizedBox(height: 20),
               TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Address',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
               TextField(
                 controller: passwordController,
-                obscureText: isPasswordHindden,
+                obscureText: isPasswordHidden,
                 decoration: InputDecoration(
                   labelText: 'Password',
-
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     onPressed: () {
                       setState(() {
-                        isPasswordHindden = !isPasswordHindden;
+                        isPasswordHidden = !isPasswordHidden;
                       });
                     },
                     icon: Icon(
-                      isPasswordHindden
-                          ? Icons.visibility_off_sharp
+                      isPasswordHidden
+                          ? Icons.visibility_off
                           : Icons.visibility,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              isLoading
-                  ? Center(child: CircularProgressIndicator())
+              const SizedBox(height: 20),
+              isLoading == true
+                  ? CircularProgressIndicator()
                   : SizedBox(
                       width: double.maxFinite,
                       child: MybuttonWidget(
-                        onTap: _login,
+                        onTap: _signUp,
                         buttonText: 'Signup',
                       ),
                     ),
-              SizedBox(height: 20),
+
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     "Already have an account?",
                     style: TextStyle(fontSize: 18),
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
                     },
-                    child: Text(
+                    child: const Text(
                       'Login here',
                       style: TextStyle(
                         fontSize: 18,

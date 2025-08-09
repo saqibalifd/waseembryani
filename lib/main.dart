@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
+
 import 'package:waseembrayani/pages/screens/app_main_screen.dart';
-// import 'package:waseembrayani/pages/auth/login_screen.dart';
-// import 'package:waseembrayani/pages/user/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +20,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    //initilize riverpod
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',

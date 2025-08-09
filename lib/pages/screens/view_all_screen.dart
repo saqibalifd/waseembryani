@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
-import 'package:waseembrayani/pages/screens/detail_screen.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/widgets/product_card.dart';
 
 class ViewAllScreen extends StatefulWidget {
   final bool? isPopular;
-  final String categoryName;
-  const ViewAllScreen({super.key, this.isPopular, required this.categoryName});
+  final String? categoryName;
+  const ViewAllScreen({super.key, this.isPopular, this.categoryName});
 
   @override
   State<ViewAllScreen> createState() => _ViewAllScreenState();
@@ -17,12 +16,14 @@ class ViewAllScreen extends StatefulWidget {
 class _ViewAllScreenState extends State<ViewAllScreen> {
   late Future<List<ProductModel>> futureFoodProducts;
   late Future<List<ProductModel>> futurePopularProducts;
+  late Future<List<ProductModel>> futureAllProducts;
 
   @override
   void initState() {
     super.initState();
     futureFoodProducts = fetchFoodProducts();
     futurePopularProducts = fetchPopularProducts();
+    futureAllProducts = fetcAllProducts();
   }
 
   Future<List<ProductModel>> fetchFoodProducts() async {
@@ -30,7 +31,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       final response = await Supabase.instance.client
           .from('products')
           .select()
-          .eq('categoryName', widget.categoryName);
+          .eq('categoryName', widget.categoryName!);
       return (response as List)
           .map((json) => ProductModel.fromJson(json))
           .toList();
@@ -46,7 +47,19 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           .from('products')
           .select()
           .eq('isPopular', true)
-          .eq('categoryName', widget.categoryName);
+          .eq('categoryName', widget.categoryName!);
+      return (response as List)
+          .map((json) => ProductModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      print('Error in fetching popular products : $e');
+      return [];
+    }
+  }
+
+  Future<List<ProductModel>> fetcAllProducts() async {
+    try {
+      final response = await Supabase.instance.client.from('products').select();
       return (response as List)
           .map((json) => ProductModel.fromJson(json))
           .toList();
@@ -58,6 +71,8 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('papular status is this ');
+    print(widget.isPopular);
     return Scaffold(
       backgroundColor: Colors.blue[50],
       appBar: AppBar(
@@ -71,7 +86,9 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       body: FutureBuilder<List<ProductModel>>(
         future: widget.isPopular == true
             ? futurePopularProducts
-            : futureFoodProducts,
+            : widget.isPopular == false
+            ? futureFoodProducts
+            : futureAllProducts,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator(color: red));
@@ -97,25 +114,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
               ),
               itemBuilder: (context, index) {
                 final product = foodProduct[index];
-                return ProductCard(
-                  onCardTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailScreen(productModel: product),
-                    ),
-                  ),
-                  image: Image.network(
-                    product.imageUrl,
-                    height: 160,
-                    errorBuilder: (context, error, stackTrace) => Padding(
-                      padding: const EdgeInsets.all(40.0),
-                      child: Icon(Icons.food_bank, size: 80),
-                    ),
-                  ),
-                  title: product.name,
-                  subtitle: product.categoryName,
-                  price: product.price.toString(),
-                );
+                return ProductCard(productModel: product);
               },
             ),
           );

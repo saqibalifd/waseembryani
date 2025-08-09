@@ -1,10 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:waseembrayani/core/models/user_model.dart';
+import 'package:waseembrayani/pages/screens/add_product_screen.dart';
+import 'package:waseembrayani/pages/screens/cart_screen.dart';
 import 'package:waseembrayani/pages/screens/home_screen.dart';
 import 'package:waseembrayani/pages/screens/profile_screen.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/pages/screens/user_activity/favourite_screen.dart';
+import 'package:waseembrayani/pages/screens/favourite_screen.dart';
 
 class AppMainScreen extends StatefulWidget {
   const AppMainScreen({super.key});
@@ -18,9 +22,44 @@ class _AppMainScreenState extends State<AppMainScreen> {
     HomeScreen(),
     FavouriteScreen(),
     ProfileScreen(),
-    Scaffold(),
+    CartScreen(),
   ];
   int currentIndex = 0;
+  late Future<List<UserModel>> futureUserInfo = Future.value([]);
+
+  Future<List<UserModel>> fetchUserInfo() async {
+    try {
+      final String userId = Supabase.instance.client.auth.currentUser!.id
+          .toString();
+      final data =
+          await Supabase.instance.client
+                  .from('users')
+                  .select()
+                  .eq('userid', userId)
+              as List<dynamic>;
+
+      return data.map((json) => UserModel.fromJson(json)).toList();
+    } catch (e) {
+      print('Error in fetching user info : $e');
+      return [];
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _intilizeData();
+  }
+
+  void _intilizeData() async {
+    try {
+      setState(() {
+        futureUserInfo = fetchUserInfo();
+      });
+    } catch (e) {
+      print('error in intilizing data : $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,49 +68,64 @@ class _AppMainScreenState extends State<AppMainScreen> {
       bottomNavigationBar: Container(
         height: 90,
         decoration: BoxDecoration(color: Colors.white),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        child: Stack(
           children: [
-            _buildNavItem(Iconsax.home_15, 'A', 0),
-            SizedBox(width: 10),
-            _buildNavItem(Iconsax.heart, 'B', 1),
-            SizedBox(width: 90),
-            _buildNavItem(Icons.person_outline, 'C', 2),
-            SizedBox(width: 10),
-            Stack(
-              clipBehavior: Clip.none,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                _buildNavItem(Iconsax.home_15, 'A', 0),
+                SizedBox(width: 10),
+                _buildNavItem(Iconsax.heart, 'B', 1),
+                SizedBox(width: 10),
+                _buildNavItem(Icons.person_outline, 'C', 2),
+                SizedBox(width: 10),
+
                 _buildNavItem(Iconsax.shopping_cart, 'D', 3),
-                Positioned(
-                  right: -7,
-                  top: 16,
-                  //we will make this numbert of cart item
-                  child: CircleAvatar(
-                    backgroundColor: red,
-                    radius: 10,
-                    child: Text(
-                      '0',
-                      style: TextStyle(fontSize: 12, color: Colors.white),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 125,
-                  top: -25,
-                  child: CircleAvatar(
-                    backgroundColor: red,
-                    radius: 35,
-                    child: Icon(
-                      CupertinoIcons.search,
-                      size: 35,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
               ],
             ),
           ],
         ),
+      ),
+      floatingActionButton: FutureBuilder(
+        future: fetchUserInfo(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return SizedBox.shrink();
+          }
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
+            return SizedBox.shrink();
+          }
+          final isAdmin = snapshot.data!.first.isAdmin;
+
+          return isAdmin == true
+              ? Positioned(
+                  bottom: 25,
+                  left: 50,
+                  child: GestureDetector(
+                    onTap: () {
+                      print('On tap is pressed');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AddProductScreen(),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      backgroundColor: red,
+                      radius: 35,
+                      child: Icon(
+                        CupertinoIcons.add,
+                        size: 35,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                )
+              : SizedBox.shrink();
+        },
       ),
     );
   }
