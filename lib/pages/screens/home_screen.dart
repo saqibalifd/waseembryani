@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/categories_model.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
@@ -24,6 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<CategoryModel> categories = [];
   String? slectedCategorie;
   final bool? isAdmin = false;
+  final String userId = Supabase.instance.client.auth.currentUser!.id
+      .toString();
   @override
   void initState() {
     super.initState();
@@ -110,6 +113,42 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future addToFavourite(ProductModel productModel) async {
+    try {
+      EasyLoading.show(status: 'loading...');
+
+      await Supabase.instance.client
+          .from('favourite')
+          .insert(productModel.toJson());
+      //add to favourite
+      EasyLoading.dismiss();
+
+      print('add to favourite success');
+    } catch (e) {
+      print('Error in Adding to favourite products : $e');
+      EasyLoading.dismiss();
+      return [];
+    }
+  }
+
+  Future<bool> checkIsFavourite(int productId) async {
+    try {
+      final String userId = Supabase.instance.client.auth.currentUser!.id;
+
+      final response = await Supabase.instance.client
+          .from('favourite')
+          .select()
+          .eq('favUserId', userId)
+          .eq('id', productId)
+          .maybeSingle();
+
+      return response != null;
+    } catch (e) {
+      print('Error checking favourite: $e');
+      return false;
+    }
+  }
+
   AuthService authService = AuthService();
 
   @override
@@ -149,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 30),
-              //this is order now card
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: BannerCard(
@@ -185,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              _heading('Categories', true, () {}, isAdmin: isAdmin),
+              _heading('Categories', false, () {}, isAdmin: isAdmin),
               //categoryies list view
               Padding(
                 padding: const EdgeInsets.only(left: 20),
@@ -278,7 +317,29 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemBuilder: (context, index) {
                           final ProductModel passProduct =
                               snapshot.data![index];
-                          return ProductCard(productModel: passProduct);
+
+                          return FutureBuilder<bool>(
+                            future: checkIsFavourite(passProduct.id),
+                            builder: (context, favSnapshot) {
+                              final isFav = favSnapshot.data;
+                              return ProductCard(
+                                isFavourite: isFav,
+                                onTap: () {
+                                  ProductModel productModel = ProductModel(
+                                    id: passProduct.id,
+                                    name: passProduct.name,
+                                    description: passProduct.description,
+                                    price: passProduct.price,
+                                    imageUrl: passProduct.imageUrl,
+                                    categoryName: passProduct.categoryName,
+                                  );
+                                  addToFavourite(productModel);
+                                },
+
+                                productModel: passProduct,
+                              );
+                            },
+                          );
                         },
                       );
                     },
@@ -328,7 +389,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         }
                         final ProductModel passProduct = snapshot.data![index];
-                        return ProductCard(productModel: passProduct);
+                        return ProductCard(
+                          isFavourite: true,
+                          onTap: () {
+                            ProductModel productModel = ProductModel(
+                              id: passProduct.id,
+                              name: passProduct.name,
+                              description: passProduct.description,
+                              price: passProduct.price,
+                              imageUrl: passProduct.imageUrl,
+                              categoryName: passProduct.categoryName,
+                            );
+                            addToFavourite(productModel);
+                          },
+                          productModel: passProduct,
+                        );
                       },
                     );
                   },
@@ -423,25 +498,22 @@ PreferredSizeWidget _appBAr(String adress, String profileImageUrl) {
     centerTitle: true,
     forceMaterialTransparency: true,
     title: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Row(
-          children: [
-            SizedBox(width: 20),
-            Text(
-              adress,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
+        SizedBox(
+          width: 180,
+          child: Text(
+            adress,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black,
+              fontWeight: FontWeight.w500,
             ),
-            Icon(Icons.location_on_outlined, size: 14, color: red),
-            SizedBox(width: 5),
-
-            Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: orange),
-          ],
+          ),
         ),
+        Icon(Icons.location_on_outlined, size: 14, color: red),
       ],
     ),
     actions: [

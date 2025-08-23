@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
 
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
       home: AuthCheck(),
+      builder: EasyLoading.init(),
     );
   }
 }

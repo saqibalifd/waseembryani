@@ -38,6 +38,7 @@ dependencies:
   supabase_flutter: ^2.9.1
   readmore: ^3.0.0
   flutter_riverpod: ^2.6.1
+  flutter_easyloading: ^3.0.5
 
 dev_dependencies:
   flutter_test:

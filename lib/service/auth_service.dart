@@ -32,14 +32,7 @@ class AuthService {
         adress: adress,
         isAdmin: false,
       );
-      await Supabase.instance.client.from('users').insert({
-        'userid': res.user!.id,
-        'email': email,
-        'name': name,
-        'adress': adress,
-        'profileImage': '',
-        'isAdmin': false,
-      });
+      await Supabase.instance.client.from('users').insert(userModel.toJson());
     } catch (e) {
       return showSnackBar(context, 'Something went wrong');
     }
@@ -48,15 +41,10 @@ class AuthService {
   // login function
   Future login(BuildContext context, String email, String password) async {
     try {
-      final response = await supabaseClient.auth.signInWithPassword(
+      await supabaseClient.auth.signInWithPassword(
         email: email,
         password: password,
       );
-      if (response.user != null) {
-        return null;
-      } else {
-        showSnackBar(context, 'Invalid email or password');
-      }
     } catch (e) {
       showSnackBar(context, 'Somehting went wrong');
     }

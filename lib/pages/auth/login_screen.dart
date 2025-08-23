@@ -23,26 +23,25 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
-    if (!mounted) return;
-    setState(() {
-      isLoading = true;
-    });
+    try {
+      setState(() {
+        isLoading = true;
+      });
 
-    final result = await _authService.login(context, email, password);
-
-    setState(() {
-      isLoading = false;
-    });
-
-    if (result == null) {
-      // success case
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const AppMainScreen()),
-      );
-      showSnackBar(context, 'Login successful');
-    } else {
-      showSnackBar(context, 'Login failed: $result');
+      await _authService
+          .login(context, email, password)
+          .then(
+            (value) => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AppMainScreen()),
+            ),
+          );
+    } catch (e) {
+      showSnackBar(context, 'Erro found : $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 

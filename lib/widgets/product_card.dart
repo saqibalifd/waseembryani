@@ -8,7 +8,14 @@ import 'package:waseembrayani/pages/screens/detail_screen.dart';
 class ProductCard extends ConsumerWidget {
   final ProductModel productModel;
   final bool? isFavourite;
-  const ProductCard({super.key, required this.productModel, this.isFavourite});
+  final VoidCallback? onTap;
+
+  const ProductCard({
+    super.key,
+    required this.productModel,
+    this.isFavourite,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -85,9 +92,7 @@ class ProductCard extends ConsumerWidget {
             ),
           ),
           GestureDetector(
-            onTap: () {
-              print('add to favourite tap');
-            },
+            onTap: onTap,
             child: Positioned(
               top: 10,
               right: 10,

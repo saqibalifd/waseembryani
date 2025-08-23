@@ -77,8 +77,11 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                 ),
                 SizedBox(height: 5),
-                TextFormField(
-                  decoration: InputDecoration(border: OutlineInputBorder()),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Product Name',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 SizedBox(height: 10),
                 TextField(
@@ -86,7 +89,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   maxLines: null,
                   keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
-                    labelText: 'Product Name',
+                    labelText: 'Product Detail',
                     border: OutlineInputBorder(),
                   ),
                 ),

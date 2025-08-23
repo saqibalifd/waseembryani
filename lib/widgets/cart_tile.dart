@@ -5,8 +5,8 @@ class CartTile extends StatelessWidget {
   final String productName;
   final String price;
   final String quantity;
-  final VoidCallback onMinusTap;
-  final VoidCallback onPlusTap;
+  final Widget removeIcon;
+  final Widget addIcon;
 
   const CartTile({
     super.key,
@@ -14,8 +14,8 @@ class CartTile extends StatelessWidget {
     required this.productName,
     required this.price,
     required this.quantity,
-    required this.onMinusTap,
-    required this.onPlusTap,
+    required this.removeIcon,
+    required this.addIcon,
   });
 
   @override
@@ -79,12 +79,12 @@ class CartTile extends StatelessWidget {
           top: 50,
           child: Row(
             children: [
-              InkWell(onTap: () {}, child: Icon(Icons.remove)),
+              removeIcon,
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text(quantity),
               ),
-              InkWell(onTap: () {}, child: Icon(Icons.add)),
+              addIcon,
             ],
           ),
         ),

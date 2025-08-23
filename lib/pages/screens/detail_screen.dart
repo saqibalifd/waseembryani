@@ -1,15 +1,9 @@
-////////////////////////////////////////////////////////////////
-///
-///
-///
-library;
-
 import 'package:flutter/material.dart';
 import 'package:readmore/readmore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/widgets/material_button_widget.dart'
-    show MaterialButtonWidget;
+import 'package:waseembrayani/widgets/snackbar.dart';
 
 class DetailScreen extends StatefulWidget {
   final ProductModel productModel;
@@ -22,6 +16,52 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   int quantity = 1;
+  bool isLoading = false;
+
+  Future<void> addToCart() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      showSnackBar(context, 'Please log in first');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final String userId = session.user.id;
+
+      // Make sure these column names match your Supabase 'cart' table
+      final cartData = {
+        'cartId': 7,
+        'cartUserId': userId,
+        'quantity': quantity,
+        'id': widget.productModel.id,
+        'name': widget.productModel.name,
+        'description': widget.productModel.description,
+        'price': 500,
+        'imageUrl': widget.productModel.imageUrl,
+        'categoryName': widget.productModel.categoryName,
+        'isPopular': widget.productModel.isPopular,
+        'isRecommended': widget.productModel.isRecommended,
+      };
+
+      final response = await Supabase.instance.client
+          .from('cart')
+          .insert(cartData);
+
+      if (response.error != null) {
+        print('Error inserting: ${response.error!.message}');
+        showSnackBar(context, 'Failed: ${response.error!.message}');
+      } else {
+        showSnackBar(context, 'Added to cart successfully');
+      }
+    } catch (e) {
+      showSnackBar(context, 'Failed to add to cart: $e');
+      print(e.toString());
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +70,14 @@ class _DetailScreenState extends State<DetailScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
+          // Background
           Container(
             height: size.height,
             width: size.width,
             color: imageBackground,
           ),
 
+          // Top Bar
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -53,12 +94,12 @@ class _DetailScreenState extends State<DetailScreen> {
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.white,
                       ),
-                      child: Center(
+                      child: const Center(
                         child: Icon(Icons.arrow_back_ios_new, size: 18),
                       ),
                     ),
                   ),
-                  // More Options Icon
+                  // More Icon
                   Container(
                     height: 40,
                     width: 40,
@@ -66,7 +107,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       borderRadius: BorderRadius.circular(10),
                       color: Colors.white,
                     ),
-                    child: Center(
+                    child: const Center(
                       child: Icon(Icons.more_horiz_outlined, size: 18),
                     ),
                   ),
@@ -75,7 +116,7 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ),
 
-          // Bottom Sheet
+          // Product Info Sheet
           Positioned(
             bottom: 0,
             left: 0,
@@ -83,7 +124,7 @@ class _DetailScreenState extends State<DetailScreen> {
             child: Container(
               width: double.infinity,
               height: 370,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
@@ -92,8 +133,9 @@ class _DetailScreenState extends State<DetailScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+                    const SizedBox(height: 130),
+
                     // Quantity Selector
-                    SizedBox(height: 130),
                     Container(
                       height: 50,
                       width: 100,
@@ -113,13 +155,16 @@ class _DetailScreenState extends State<DetailScreen> {
                                 });
                               }
                             },
-                            child: Icon(Icons.remove, color: Colors.white),
+                            child: const Icon(
+                              Icons.remove,
+                              color: Colors.white,
+                            ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
                               quantity.toString(),
-                              style: TextStyle(color: Colors.white),
+                              style: const TextStyle(color: Colors.white),
                             ),
                           ),
                           // Increase Quantity
@@ -129,39 +174,40 @@ class _DetailScreenState extends State<DetailScreen> {
                                 quantity++;
                               });
                             },
-                            child: Icon(Icons.add, color: Colors.white),
+                            child: const Icon(Icons.add, color: Colors.white),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20),
 
-                    // Product Info
+                    const SizedBox(height: 20),
+
+                    // Product Name & Price
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Name and Category
+                        // Name & Category
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               widget.productModel.name,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               widget.productModel.categoryName,
-                              style: TextStyle(fontSize: 12),
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ],
                         ),
                         // Price
                         Text(
                           'Rs. ${widget.productModel.price}',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w500,
                           ),
@@ -169,9 +215,9 @@ class _DetailScreenState extends State<DetailScreen> {
                       ],
                     ),
 
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                    // Product Description
+                    // Description
                     ReadMoreText(
                       widget.productModel.description,
                       trimLines: 3,
@@ -179,13 +225,13 @@ class _DetailScreenState extends State<DetailScreen> {
                       trimMode: TrimMode.Line,
                       trimCollapsedText: ' Read more',
                       trimExpandedText: ' Read less',
-                      style: TextStyle(fontSize: 12),
-                      moreStyle: TextStyle(
+                      style: const TextStyle(fontSize: 12),
+                      moreStyle: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: red,
                       ),
-                      lessStyle: TextStyle(
+                      lessStyle: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey,
@@ -197,7 +243,7 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ),
 
-          // Product Main Image in Front
+          // Product Image
           Positioned(
             top: 130,
             left: 0,
@@ -209,17 +255,19 @@ class _DetailScreenState extends State<DetailScreen> {
                 width: 400,
                 height: 200,
                 errorBuilder: (context, error, stackTrace) =>
-                    Icon(Icons.fastfood, size: 200),
+                    const Icon(Icons.fastfood, size: 200),
               ),
             ),
           ),
         ],
       ),
+
+      // Add to Cart Button
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: MaterialButton(
           onPressed: () {
-            // Handle add to cart
+            addToCart();
           },
           color: red,
           height: 60,
@@ -227,28 +275,14 @@ class _DetailScreenState extends State<DetailScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          child: Text(
-            'Add to Cart',
-            style: TextStyle(fontSize: 16, color: Colors.white),
-          ),
+          child: isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  'Add to Cart',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
-
-
-
-  //  MaterialButtonWidget(
-  //                     onTap: () {},
-  //                     title: 'Add to Cart',
-  //                     height: 50,
-  //                     width: 190,
-  //                     color: red,
-  //                   ),

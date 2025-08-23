@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
@@ -69,6 +70,23 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     }
   }
 
+  Future addToFavourite(ProductModel productModel) async {
+    try {
+      EasyLoading.show(status: 'loading...');
+
+      await Supabase.instance.client
+          .from('favourite')
+          .insert(productModel.toJson());
+      //add to favourite
+      EasyLoading.dismiss();
+      print('add to favourite success');
+    } catch (e) {
+      print('Error in Adding to favourite products : $e');
+      EasyLoading.dismiss();
+      return [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print('papular status is this ');
@@ -114,7 +132,20 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
               ),
               itemBuilder: (context, index) {
                 final product = foodProduct[index];
-                return ProductCard(productModel: product);
+                return ProductCard(
+                  onTap: () {
+                    ProductModel productModel = ProductModel(
+                      id: product.id,
+                      name: product.name,
+                      description: product.description,
+                      price: product.price,
+                      imageUrl: product.imageUrl,
+                      categoryName: product.categoryName,
+                    );
+                    addToFavourite(productModel);
+                  },
+                  productModel: product,
+                );
               },
             ),
           );
