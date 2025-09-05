@@ -79,11 +79,30 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
           .insert(productModel.toJson());
       //add to favourite
       EasyLoading.dismiss();
+
       print('add to favourite success');
     } catch (e) {
       print('Error in Adding to favourite products : $e');
       EasyLoading.dismiss();
       return [];
+    }
+  }
+
+  Future<bool> checkIsFavourite(int productId) async {
+    try {
+      final String userId = Supabase.instance.client.auth.currentUser!.id;
+
+      final response = await Supabase.instance.client
+          .from('favourite')
+          .select()
+          .eq('favUserId', userId)
+          .eq('id', productId)
+          .maybeSingle();
+
+      return response != null;
+    } catch (e) {
+      print('Error checking favourite: $e');
+      return false;
     }
   }
 
@@ -132,19 +151,29 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
               ),
               itemBuilder: (context, index) {
                 final product = foodProduct[index];
-                return ProductCard(
-                  onTap: () {
-                    ProductModel productModel = ProductModel(
-                      id: product.id,
-                      name: product.name,
-                      description: product.description,
-                      price: product.price,
-                      imageUrl: product.imageUrl,
-                      categoryName: product.categoryName,
+                return FutureBuilder<bool>(
+                  future: checkIsFavourite(product.id),
+                  builder: (context, favSnapshot) {
+                    final isFav = favSnapshot.data;
+                    return ProductCard(
+                      isFavourite: isFav,
+                      onTap: () {
+                        ProductModel productModel = ProductModel(
+                          id: product.id,
+                          name: product.name,
+                          description: product.description,
+                          price: product.price,
+                          imageUrl: product.imageUrl,
+                          categoryName: product.categoryName,
+                        );
+                        setState(() {
+                          addToFavourite(productModel);
+                        });
+                      },
+
+                      productModel: product,
                     );
-                    addToFavourite(productModel);
                   },
-                  productModel: product,
                 );
               },
             ),

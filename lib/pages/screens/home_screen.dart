@@ -333,7 +333,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     imageUrl: passProduct.imageUrl,
                                     categoryName: passProduct.categoryName,
                                   );
-                                  addToFavourite(productModel);
+                                  setState(() {
+                                    addToFavourite(productModel);
+                                  });
                                 },
 
                                 productModel: passProduct,
@@ -389,20 +391,30 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         }
                         final ProductModel passProduct = snapshot.data![index];
-                        return ProductCard(
-                          isFavourite: true,
-                          onTap: () {
-                            ProductModel productModel = ProductModel(
-                              id: passProduct.id,
-                              name: passProduct.name,
-                              description: passProduct.description,
-                              price: passProduct.price,
-                              imageUrl: passProduct.imageUrl,
-                              categoryName: passProduct.categoryName,
+                        return FutureBuilder<bool>(
+                          future: checkIsFavourite(passProduct.id),
+                          builder: (context, favSnapshot) {
+                            final isFav = favSnapshot.data;
+                            return ProductCard(
+                              isFavourite: isFav,
+                              onTap: () {
+                                ProductModel productModel = ProductModel(
+                                  id: passProduct.id,
+                                  name: passProduct.name,
+                                  description: passProduct.description,
+                                  price: passProduct.price,
+                                  imageUrl: passProduct.imageUrl,
+                                  categoryName: passProduct.categoryName,
+                                );
+
+                                setState(() {
+                                  addToFavourite(productModel);
+                                });
+                              },
+
+                              productModel: passProduct,
                             );
-                            addToFavourite(productModel);
                           },
-                          productModel: passProduct,
                         );
                       },
                     );
@@ -555,7 +567,7 @@ Widget catregoryCard(
         ),
         SizedBox(width: 5),
         Text(
-          categoryName ?? '',
+          categoryName,
           style: TextStyle(
             fontWeight: FontWeight.w500,
             color: isSelected ? Colors.white : Colors.black,

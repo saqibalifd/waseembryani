@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/widgets/mybutton_widget.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
