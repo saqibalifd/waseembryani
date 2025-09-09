@@ -2,12 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
+import 'package:waseembrayani/service/product_services.dart';
 import 'package:waseembrayani/widgets/product_card.dart';
+import 'package:waseembrayani/widgets/shimmer/product_grid_card_shimmer.dart';
 
+/// ViewAllScreen
+/// Displays a grid of products based on:
+/// - Popular products
+/// - Category-specific products
+/// - All products
+/// Supports adding to favourites using Supabase.
 class ViewAllScreen extends StatefulWidget {
-  final bool? isPopular;
-  final String? categoryName;
+  final bool? isPopular; // If true → show only popular products
+  final String? categoryName; // If provided → show products of this category
+
   const ViewAllScreen({super.key, this.isPopular, this.categoryName});
 
   @override
@@ -15,6 +23,9 @@ class ViewAllScreen extends StatefulWidget {
 }
 
 class _ViewAllScreenState extends State<ViewAllScreen> {
+  final ProductServices _productServices = ProductServices();
+
+  // Future lists for different product queries
   late Future<List<ProductModel>> futureFoodProducts;
   late Future<List<ProductModel>> futurePopularProducts;
   late Future<List<ProductModel>> futureAllProducts;
@@ -22,64 +33,30 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
   @override
   void initState() {
     super.initState();
-    futureFoodProducts = fetchFoodProducts();
-    futurePopularProducts = fetchPopularProducts();
-    futureAllProducts = fetcAllProducts();
+    _initilizeData(); // initialize product data based on category/popularity
   }
 
-  Future<List<ProductModel>> fetchFoodProducts() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('products')
-          .select()
-          .eq('categoryName', widget.categoryName!);
-      return (response as List)
-          .map((json) => ProductModel.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error in fetching products : $e');
-      return [];
-    }
+  /// Initialize data for products
+  void _initilizeData() {
+    futureFoodProducts = _productServices.fetchFoodProducts(
+      widget.categoryName.toString(),
+    );
+    futurePopularProducts = _productServices.fetchPopularProducts(
+      widget.categoryName.toString(),
+    );
+    futureAllProducts = _productServices.fetcAllProducts();
   }
 
-  Future<List<ProductModel>> fetchPopularProducts() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('products')
-          .select()
-          .eq('isPopular', true)
-          .eq('categoryName', widget.categoryName!);
-      return (response as List)
-          .map((json) => ProductModel.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error in fetching popular products : $e');
-      return [];
-    }
-  }
-
-  Future<List<ProductModel>> fetcAllProducts() async {
-    try {
-      final response = await Supabase.instance.client.from('products').select();
-      return (response as List)
-          .map((json) => ProductModel.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error in fetching popular products : $e');
-      return [];
-    }
-  }
-
+  /// Add product to favourite table in Supabase
   Future addToFavourite(ProductModel productModel) async {
     try {
       EasyLoading.show(status: 'loading...');
 
       await Supabase.instance.client
           .from('favourite')
-          .insert(productModel.toJson());
-      //add to favourite
-      EasyLoading.dismiss();
+          .insert(productModel.toJson()); // insert product as favourite
 
+      EasyLoading.dismiss();
       print('add to favourite success');
     } catch (e) {
       print('Error in Adding to favourite products : $e');
@@ -88,6 +65,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     }
   }
 
+  /// Check if a product is already in favourites for current user
   Future<bool> checkIsFavourite(int productId) async {
     try {
       final String userId = Supabase.instance.client.auth.currentUser!.id;
@@ -95,8 +73,8 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
       final response = await Supabase.instance.client
           .from('favourite')
           .select()
-          .eq('favUserId', userId)
-          .eq('id', productId)
+          .eq('favUserId', userId) // filter by current logged in user
+          .eq('id', productId) // check product id
           .maybeSingle();
 
       return response != null;
@@ -108,10 +86,13 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('papular status is this ');
+    print('popular status is this ');
     print(widget.isPopular);
+
     return Scaffold(
       backgroundColor: Colors.blue[50],
+
+      /// AppBar title changes depending on isPopular flag
       appBar: AppBar(
         title: Text(
           widget.isPopular == true ? 'Popular Products' : 'All Products',
@@ -120,44 +101,57 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
         forceMaterialTransparency: true,
         centerTitle: true,
       ),
+
+      /// FutureBuilder for product list
       body: FutureBuilder<List<ProductModel>>(
+        // Decide which products to show:
         future: widget.isPopular == true
-            ? futurePopularProducts
+            ? futurePopularProducts // popular products
             : widget.isPopular == false
-            ? futureFoodProducts
-            : futureAllProducts,
+            ? futureFoodProducts // category products
+            : futureAllProducts, // all products
         builder: (context, snapshot) {
+          // --- Loading state ---
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: red));
+            return ProductGridCardShimmer();
           }
 
+          // --- Error state ---
           if (snapshot.hasError) {
-            return Center(child: Text('Something went wrong'));
+            return const Center(child: Text('Something went wrong'));
           }
 
+          // --- Empty data state ---
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('This item is currently not available'));
+            return const SizedBox.shrink();
           }
 
+          // --- Success state ---
           final foodProduct = snapshot.data!;
 
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: GridView.builder(
               itemCount: foodProduct.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // 2 columns in grid
                 childAspectRatio: .6,
               ),
               itemBuilder: (context, index) {
                 final product = foodProduct[index];
+
+                // Check if this product is favourite using another FutureBuilder
                 return FutureBuilder<bool>(
                   future: checkIsFavourite(product.id),
                   builder: (context, favSnapshot) {
                     final isFav = favSnapshot.data;
+
                     return ProductCard(
-                      isFavourite: isFav,
+                      productModel: product,
+                      isFavourite: isFav, // update UI if favourite
+
                       onTap: () {
+                        // Add/remove favourite on tap
                         ProductModel productModel = ProductModel(
                           id: product.id,
                           name: product.name,
@@ -170,8 +164,6 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
                           addToFavourite(productModel);
                         });
                       },
-
-                      productModel: product,
                     );
                   },
                 );

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:waseembrayani/core/models/user_model.dart';
-import 'package:waseembrayani/pages/auth/login_screen.dart';
+import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/service/user_services.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
 
 class AuthService {
   final supabaseClient = Supabase.instance.client;
-
+  UserServices userServices = UserServices();
   //signup function
-  Future signUp({
+  Future<void> signUp({
     required BuildContext context,
     required String email,
     required String password,
@@ -22,31 +22,37 @@ class AuthService {
       );
       if (res.user == null) {
         return showSnackBar(context, 'User registration failed');
+      } else {
+        await userServices.storeUserInfo(
+          email: email,
+          name: name,
+          adress: adress,
+          res: res,
+          context: context,
+        );
       }
-
-      UserModel userModel = UserModel(
-        name: name,
-        email: email,
-        userid: res.user!.id,
-        profileImage: '',
-        adress: adress,
-        isAdmin: false,
-      );
-      await Supabase.instance.client.from('users').insert(userModel.toJson());
     } catch (e) {
-      return showSnackBar(context, 'Something went wrong');
+      throw SupabaseExceptionHandler.handle(e);
     }
   }
 
   // login function
-  Future login(BuildContext context, String email, String password) async {
+  Future<void> login(
+    BuildContext context,
+    String email,
+    String password,
+  ) async {
     try {
-      await supabaseClient.auth.signInWithPassword(
+      final response = await supabaseClient.auth.signInWithPassword(
         email: email,
         password: password,
       );
+
+      if (response.user == null) {
+        throw Failure('Login Failed', code: "NO_USER");
+      }
     } catch (e) {
-      showSnackBar(context, 'Somehting went wrong');
+      throw SupabaseExceptionHandler.handle(e);
     }
   }
 
@@ -55,12 +61,8 @@ class AuthService {
     try {
       await supabaseClient.auth.signOut();
       if (!context.mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
     } catch (e) {
-      print('Logout error: ${e.toString()}');
+      throw SupabaseExceptionHandler.handle(e);
     }
   }
 }

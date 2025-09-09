@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/widgets/mybutton_widget.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
 
+/// Signup Screen
+/// Allows user to create a new account with:
+/// - Name
+/// - Email
+/// - Address
+/// - Password
+/// Uses AuthService for backend signup and redirects to LoginScreen on success.
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -12,34 +22,44 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  /// --- Form key for validation ---
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  /// --- Controllers for input fields ---
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+  /// --- AuthService instance ---
   final AuthService _authService = AuthService();
-  bool isLoading = false;
+
+  /// --- To toggle password visibility ---
   bool isPasswordHidden = true;
 
+  /// Signup function
+  /// 1. Validates form inputs
+  /// 2. Shows loading animation
+  /// 3. Calls AuthService.signUp
+  /// 4. On success → Navigate to LoginScreen
+  /// 5. On error → Show snackbar with error message
   Future<void> _signUp() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final name = nameController.text.trim();
     final address = addressController.text.trim();
 
-    // Validation
-    if (name.isEmpty) return showSnackBar(context, 'Please enter your name');
-    if (address.isEmpty)
-      return showSnackBar(context, 'Please enter your address');
-    if (!email.contains('@') || !email.contains('.')) {
-      return showSnackBar(context, 'Please enter a valid email address');
-    }
-    if (password.length < 6) {
-      return showSnackBar(context, 'Password must be at least 6 characters');
-    }
-
-    setState(() => isLoading = true);
-
     try {
+      // Show loading spinner while signup request is running
+      EasyLoading.show(
+        maskType: EasyLoadingMaskType.black,
+        indicator: LoadingAnimationWidget.stretchedDots(
+          size: 30,
+          color: Colors.white,
+        ),
+      );
+
+      // Call signup API
       await _authService.signUp(
         context: context,
         email: email,
@@ -48,14 +68,24 @@ class _SignupScreenState extends State<SignupScreen> {
         adress: address,
       );
 
+      if (!mounted) return;
+
+      // Navigate to LoginScreen on successful signup
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     } catch (e) {
-      showSnackBar(context, 'Error: ${e.toString()}');
+      // Handle custom failure error
+      if (e is Failure) {
+        showSnackBar(context, e.message.toString());
+      } else {
+        // Fallback error
+        showSnackBar(context, 'Unexpected error');
+      }
     } finally {
-      if (mounted) setState(() => isLoading = false);
+      // Always dismiss loader after process ends
+      EasyLoading.dismiss();
     }
   }
 
@@ -63,102 +93,163 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
+      /// Scrollable layout → prevents overflow on small screens
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(15),
-          child: Column(
-            children: [
-              Image.asset(
-                'assets/images/signupIllustration.jpg',
-                height: 400,
-                width: double.maxFinite,
-                fit: BoxFit.cover,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                /// --- Top illustration image ---
+                Image.asset(
+                  'assets/images/signupIllustration.png',
+                  height: 250,
+                  width: double.maxFinite,
+                  fit: BoxFit.scaleDown,
                 ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Address',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: passwordController,
-                obscureText: isPasswordHidden,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        isPasswordHidden = !isPasswordHidden;
-                      });
-                    },
-                    icon: Icon(
-                      isPasswordHidden
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              isLoading == true
-                  ? CircularProgressIndicator()
-                  : SizedBox(
-                      width: double.maxFinite,
-                      child: MybuttonWidget(
-                        onTap: _signUp,
-                        buttonText: 'Signup',
-                      ),
-                    ),
+                const SizedBox(height: 20),
 
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Already have an account?",
-                    style: TextStyle(fontSize: 18),
+                /// --- Name field ---
+                TextFormField(
+                  controller: nameController,
+                  keyboardType: TextInputType.name,
+                  validator: (value) {
+                    if (value == '' || value!.isEmpty) {
+                      return 'Please enter name';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
-                      );
-                    },
-                    child: const Text(
-                      'Login here',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                        letterSpacing: -1,
+                ),
+                const SizedBox(height: 20),
+
+                /// --- Email field ---
+                TextFormField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == '' || value!.isEmpty) {
+                      return 'Please enter email';
+                    }
+
+                    // Regex validation for email format
+                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                /// --- Address field ---
+                TextFormField(
+                  controller: addressController,
+                  keyboardType: TextInputType.streetAddress,
+                  validator: (value) {
+                    if (value == '' || value!.isEmpty) {
+                      return 'Please enter adress';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Address',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                /// --- Password field ---
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: isPasswordHidden,
+                  keyboardType: TextInputType.visiblePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters long';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          // Toggle password visibility
+                          isPasswordHidden = !isPasswordHidden;
+                        });
+                      },
+                      icon: Icon(
+                        isPasswordHidden
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 20),
+
+                /// --- Signup button ---
+                SizedBox(
+                  width: double.maxFinite,
+                  child: MybuttonWidget(
+                    onTap: () {
+                      // Validate form before calling signup
+                      if (_formKey.currentState!.validate()) {
+                        _signUp();
+                      }
+                    },
+                    buttonText: 'Signup',
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                /// --- Redirect to login ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Already have an account?",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to login screen
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LoginScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        ' Login here',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
