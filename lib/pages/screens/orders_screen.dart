@@ -5,14 +5,14 @@ import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/pages/screens/detail_screen.dart';
 
-class FavouriteScreen extends StatefulWidget {
-  const FavouriteScreen({super.key});
+class OrdersScreen extends StatefulWidget {
+  const OrdersScreen({super.key});
 
   @override
-  State<FavouriteScreen> createState() => _FavouriteScreenState();
+  State<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _FavouriteScreenState extends State<FavouriteScreen> {
+class _OrdersScreenState extends State<OrdersScreen> {
   late Future<List<FavouriteProductModel>> futureFavProducts = Future.value([]);
   @override
   void initState() {

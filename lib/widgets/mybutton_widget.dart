@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:waseembrayani/core/utils/consts.dart';
 
 class MybuttonWidget extends StatelessWidget {
   final VoidCallback onTap;
@@ -16,7 +17,7 @@ class MybuttonWidget extends StatelessWidget {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        backgroundColor: color ?? Colors.blue,
+        backgroundColor: color ?? red,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
 

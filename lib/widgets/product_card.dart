@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/pages/screens/detail_screen.dart';
@@ -38,15 +37,12 @@ class ProductCard extends ConsumerWidget {
               width: 200,
               child: Column(
                 children: [
-                  Hero(
-                    tag: productModel.name,
-                    child: Image.network(
-                      productModel.imageUrl,
-                      height: 160,
-                      errorBuilder: (context, error, stackTrace) => Padding(
-                        padding: const EdgeInsets.all(40.0),
-                        child: Icon(Icons.fastfood, size: 80),
-                      ),
+                  Image.network(
+                    productModel.imageUrl,
+                    height: 160,
+                    errorBuilder: (context, error, stackTrace) => Padding(
+                      padding: const EdgeInsets.all(40.0),
+                      child: Icon(Icons.fastfood, size: 80),
                     ),
                   ),
                   SizedBox(height: 5),
@@ -91,17 +87,17 @@ class ProductCard extends ConsumerWidget {
               ),
             ),
           ),
-          GestureDetector(
-            onTap: onTap,
-            child: Positioned(
-              top: 10,
-              right: 10,
+          // GestureDetector(
+          //   onTap: onTap,
+          //   child: Positioned(
+          //     top: 10,
+          //     right: 10,
 
-              child: isFavourite == true
-                  ? Icon(Iconsax.heart5, color: red)
-                  : Icon(Iconsax.heart),
-            ),
-          ),
+          //     child: isFavourite == true
+          //         ? Icon(Iconsax.heart5, color: red)
+          //         : Icon(Iconsax.heart),
+          //   ),
+          // ),
         ],
       ),
     );

@@ -1,64 +1,39 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/pages/screens/add_product_screen.dart';
 import 'package:waseembrayani/pages/screens/cart_screen.dart';
 import 'package:waseembrayani/pages/screens/home_screen.dart';
 import 'package:waseembrayani/pages/screens/profile_screen.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/pages/screens/favourite_screen.dart';
+import 'package:waseembrayani/pages/screens/orders_screen.dart';
+import 'package:waseembrayani/service/user_services.dart';
 
 class AppMainScreen extends StatefulWidget {
-  const AppMainScreen({super.key});
+  final int? getIndex;
+  const AppMainScreen({super.key, this.getIndex});
 
   @override
   State<AppMainScreen> createState() => _AppMainScreenState();
 }
 
 class _AppMainScreenState extends State<AppMainScreen> {
+  final UserServices _userServices = UserServices();
   final List<Widget> _pages = [
     HomeScreen(),
-    FavouriteScreen(),
+    OrdersScreen(),
     ProfileScreen(),
     CartScreen(),
   ];
-  int currentIndex = 0;
+  late int currentIndex;
   late Future<List<UserModel>> futureUserInfo = Future.value([]);
-
-  Future<List<UserModel>> fetchUserInfo() async {
-    try {
-      final String userId = Supabase.instance.client.auth.currentUser!.id
-          .toString();
-      final data =
-          await Supabase.instance.client
-                  .from('users')
-                  .select()
-                  .eq('userid', userId)
-              as List<dynamic>;
-
-      return data.map((json) => UserModel.fromJson(json)).toList();
-    } catch (e) {
-      print('Error in fetching user info : $e');
-      return [];
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    _intilizeData();
-  }
-
-  void _intilizeData() async {
-    try {
-      setState(() {
-        futureUserInfo = fetchUserInfo();
-      });
-    } catch (e) {
-      print('error in intilizing data : $e');
-    }
+    _userServices.fetchUserInfo();
+    currentIndex = widget.getIndex ?? 0;
   }
 
   @override
@@ -75,19 +50,44 @@ class _AppMainScreenState extends State<AppMainScreen> {
               children: [
                 _buildNavItem(Iconsax.home_15, 'A', 0),
                 SizedBox(width: 10),
-                _buildNavItem(Iconsax.heart, 'B', 1),
+                _buildNavItem(Iconsax.receipt, 'B', 1),
                 SizedBox(width: 10),
                 _buildNavItem(Icons.person_outline, 'C', 2),
                 SizedBox(width: 10),
 
-                _buildNavItem(Iconsax.shopping_cart, 'D', 3),
+                Stack(
+                  children: [
+                    _buildNavItem(Iconsax.shopping_cart, 'D', 3),
+                    Positioned(
+                      left: 8,
+                      right: 0,
+                      top: 14,
+                      child: PersistentShoppingCart().showCartItems(
+                        cartItemsBuilder: (context, cartItems) {
+                          if (cartItems.isEmpty) return SizedBox.shrink();
+                          return CircleAvatar(
+                            radius: 8,
+                            backgroundColor: red,
+                            child: Text(
+                              cartItems.length.toString(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.white,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ],
         ),
       ),
       floatingActionButton: FutureBuilder(
-        future: fetchUserInfo(),
+        future: _userServices.fetchUserInfo(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return SizedBox.shrink();

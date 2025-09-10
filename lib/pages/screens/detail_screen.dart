@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:persistent_shopping_cart/model/cart_model.dart';
+import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:readmore/readmore.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
+import 'package:waseembrayani/pages/screens/app_main_screen.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -16,52 +19,6 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   int quantity = 1;
-  bool isLoading = false;
-
-  Future<void> addToCart() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session == null) {
-      showSnackBar(context, 'Please log in first');
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      final String userId = session.user.id;
-
-      // Make sure these column names match your Supabase 'cart' table
-      final cartData = {
-        'cartId': 7,
-        'cartUserId': userId,
-        'quantity': quantity,
-        'id': widget.productModel.id,
-        'name': widget.productModel.name,
-        'description': widget.productModel.description,
-        'price': 500,
-        'imageUrl': widget.productModel.imageUrl,
-        'categoryName': widget.productModel.categoryName,
-        'isPopular': widget.productModel.isPopular,
-        'isRecommended': widget.productModel.isRecommended,
-      };
-
-      final response = await Supabase.instance.client
-          .from('cart')
-          .insert(cartData);
-
-      if (response.error != null) {
-        print('Error inserting: ${response.error!.message}');
-        showSnackBar(context, 'Failed: ${response.error!.message}');
-      } else {
-        showSnackBar(context, 'Added to cart successfully');
-      }
-    } catch (e) {
-      showSnackBar(context, 'Failed to add to cart: $e');
-      print(e.toString());
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,16 +57,48 @@ class _DetailScreenState extends State<DetailScreen> {
                     ),
                   ),
                   // More Icon
-                  Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.white,
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.more_horiz_outlined, size: 18),
-                    ),
+                  Stack(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => AppMainScreen(getIndex: 3),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          height: 40,
+                          width: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white,
+                          ),
+                          child: Center(child: Icon(Iconsax.shopping_cart)),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: PersistentShoppingCart().showCartItems(
+                          cartItemsBuilder: (context, cartItems) {
+                            if (cartItems.isEmpty) return SizedBox.shrink();
+                            return CircleAvatar(
+                              radius: 8,
+                              backgroundColor: red,
+                              child: Text(
+                                cartItems.length.toString(),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -152,6 +141,7 @@ class _DetailScreenState extends State<DetailScreen> {
                               if (quantity > 1) {
                                 setState(() {
                                   quantity--;
+                                  print(quantity);
                                 });
                               }
                             },
@@ -172,6 +162,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             onTap: () {
                               setState(() {
                                 quantity++;
+                                print(quantity);
                               });
                             },
                             child: const Icon(Icons.add, color: Colors.white),
@@ -248,15 +239,12 @@ class _DetailScreenState extends State<DetailScreen> {
             top: 130,
             left: 0,
             right: 0,
-            child: Hero(
-              tag: widget.productModel.id.toString(),
-              child: Image.network(
-                widget.productModel.imageUrl,
-                width: 400,
-                height: 200,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.fastfood, size: 200),
-              ),
+            child: Image.network(
+              widget.productModel.imageUrl,
+              width: 400,
+              height: 200,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.fastfood, size: 200),
             ),
           ),
         ],
@@ -266,8 +254,18 @@ class _DetailScreenState extends State<DetailScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: MaterialButton(
-          onPressed: () {
-            addToCart();
+          onPressed: () async {
+            await PersistentShoppingCart().addToCart(
+              PersistentShoppingCartItem(
+                productId: widget.productModel.id.toString(),
+                productName: widget.productModel.name,
+                unitPrice: widget.productModel.price,
+                quantity: quantity,
+                productDescription: widget.productModel.description,
+                productThumbnail: widget.productModel.imageUrl,
+              ),
+            );
+            showSnackBar(context, 'Added to your cart!');
           },
           color: red,
           height: 60,
@@ -275,12 +273,10 @@ class _DetailScreenState extends State<DetailScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          child: isLoading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  'Add to Cart',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
+          child: const Text(
+            'Add to Cart',
+            style: TextStyle(fontSize: 16, color: Colors.white),
+          ),
         ),
       ),
     );

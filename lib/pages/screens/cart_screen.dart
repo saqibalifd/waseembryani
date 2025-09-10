@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:waseembrayani/core/models/cart_model.dart';
+import 'package:flutter_swipe_action_cell/core/cell.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:persistent_shopping_cart/model/cart_model.dart';
+import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
+import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/pages/screens/detail_screen.dart';
+import 'package:waseembrayani/service/user_services.dart';
 import 'package:waseembrayani/widgets/cart_tile.dart';
 import 'package:waseembrayani/widgets/material_button_widget.dart';
+import 'package:waseembrayani/widgets/snackbar.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -15,89 +20,32 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  late Future<List<CartModel>> futureCartProducts = Future.value([]);
-  late int grandTotal;
+  double totalPrice = PersistentShoppingCart().calculateTotalPrice();
+  final UserServices _userServices = UserServices();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _adressController = TextEditingController();
+  final TextEditingController _additionlNotesController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    _loadUserInfo();
   }
 
-  void _initializeData() {
-    setState(() {
-      futureCartProducts = fetchCartProducts();
-    });
-  }
+  void _loadUserInfo() async {
+    final List<UserModel> users = await _userServices.fetchUserInfo();
 
-  Future<List<CartModel>> fetchCartProducts() async {
-    try {
-      final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
-      if (userId.isEmpty) return [];
-
-      final response = await Supabase.instance.client
-          .from('cart')
-          .select()
-          .eq('cartUserId', userId);
-
-      if (response is List) {
-        return response.map((json) => CartModel.fromJson(json)).toList();
-      }
-      return [];
-    } catch (e) {
-      print('Error in fetching products: $e');
-      return [];
-    }
-  }
-
-  Future<void> increaseQuantity({
-    required int cartId,
-    required int currentQuantity,
-  }) async {
-    try {
-      final updatedQuantity = currentQuantity + 1;
-
-      await Supabase.instance.client
-          .from('cart')
-          .update({'quantity': updatedQuantity})
-          .eq('cartId', cartId);
-
-      print('Quantity increased to $updatedQuantity');
-      _initializeData();
-    } catch (e) {
-      print('Error increasing quantity: $e');
-    }
-  }
-
-  Future<void> decreaseQuantity({
-    required int cartId,
-    required int currentQuantity,
-  }) async {
-    try {
-      if (currentQuantity > 1) {
-        final updatedQuantity = currentQuantity - 1;
-
-        await Supabase.instance.client
-            .from('cart')
-            .update({'quantity': updatedQuantity})
-            .eq('cartId', cartId);
-
-        print('Quantity decreased to $updatedQuantity');
-        _initializeData();
-      } else {
-        print('Cannot decrease below 1');
-      }
-    } catch (e) {
-      print('Error decreasing quantity: $e');
-    }
-  }
-
-  Future placeOrder() async {
-    try {
-      //plasce order
-    } catch (e) {
-      print('Error in fetching user info : $e');
-      return [];
+    if (users.isNotEmpty) {
+      final userinfo = users.first; // take first user
+      setState(() {
+        _nameController.text = userinfo.name ?? "";
+        _emailController.text = userinfo.email ?? "";
+        _adressController.text = userinfo.adress ?? "";
+      });
     }
   }
 
@@ -107,91 +55,264 @@ class _CartScreenState extends State<CartScreen> {
       appBar: AppBar(
         centerTitle: true,
         forceMaterialTransparency: true,
+        automaticallyImplyLeading: false,
         title: const Text(
           "Cart Screen",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: FutureBuilder<List<CartModel>>(
-        future: futureCartProducts,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data!.isEmpty) {
-            return const Center(child: Text('Something went wrong'));
-          }
+      body: Column(
+        children: [
+          PersistentShoppingCart().showCartItems(
+            cartItemsBuilder:
+                (
+                  BuildContext context,
+                  List<PersistentShoppingCartItem> cartItems,
+                ) {
+                  if (cartItems.isEmpty) {
+                    return const SizedBox();
+                  }
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: cartItems.length,
+                      itemBuilder: (context, index) {
+                        final item = cartItems[index];
+                        return InkWell(
+                          onTap: () {
+                            final ProductModel productModel = ProductModel(
+                              id: int.parse(item.productId),
+                              name: item.productName,
+                              description: item.productDescription.toString(),
+                              price: item.unitPrice,
+                              imageUrl: item.productImages.toString(),
+                              categoryName: '',
+                            );
 
-          return Column(
-            children: [
-              SizedBox(
-                height: 340,
-                child: ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    final data = snapshot.data![index];
-                    final price = data.quantity * data.price;
-
-                    return InkWell(
-                      onTap: () {
-                        final ProductModel productModel = ProductModel(
-                          id: data.id,
-                          name: data.name,
-                          description: data.description,
-                          price: data.price,
-                          imageUrl: data.imageUrl,
-                          categoryName: data.categoryName,
-                        );
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                DetailScreen(productModel: productModel),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    DetailScreen(productModel: productModel),
+                              ),
+                            );
+                          },
+                          child: SwipeActionCell(
+                            trailingActions: <SwipeAction>[
+                              SwipeAction(
+                                color: Colors.transparent,
+                                closeOnTap: true,
+                                performsFirstActionWithFullSwipe: true,
+                                icon: Icon(Icons.delete, color: red, size: 35),
+                                onTap: (CompletionHandler handler) async {
+                                  await PersistentShoppingCart().removeFromCart(
+                                    item.productId,
+                                  );
+                                  setState(() {
+                                    totalPrice = PersistentShoppingCart()
+                                        .calculateTotalPrice();
+                                  });
+                                },
+                              ),
+                            ],
+                            key: ObjectKey(item.productId),
+                            child: CartTile(
+                              imageUrl: item.productThumbnail.toString(),
+                              productName: item.productName,
+                              price: item.unitPrice.toStringAsFixed(0),
+                              quantity: item.quantity.toString(),
+                              addIcon: InkWell(
+                                onTap: () async {
+                                  await PersistentShoppingCart()
+                                      .incrementCartItemQuantity(
+                                        item.productId,
+                                      );
+                                  setState(() {
+                                    totalPrice = PersistentShoppingCart()
+                                        .calculateTotalPrice();
+                                  });
+                                },
+                                child: const Icon(Icons.add),
+                              ),
+                              removeIcon: InkWell(
+                                onTap: () async {
+                                  await PersistentShoppingCart()
+                                      .decrementCartItemQuantity(
+                                        item.productId,
+                                      );
+                                  setState(() {
+                                    totalPrice = PersistentShoppingCart()
+                                        .calculateTotalPrice();
+                                  });
+                                },
+                                child: const Icon(Icons.remove),
+                              ),
+                            ),
                           ),
                         );
                       },
-                      child: CartTile(
-                        imageUrl: data.imageUrl,
-                        productName: data.name,
-                        price: price.toStringAsFixed(2),
-                        quantity: data.quantity.toString(),
-                        addIcon: InkWell(
-                          onTap: () => increaseQuantity(
-                            cartId: data.cartId ?? 0,
-                            currentQuantity: data.quantity,
+                    ),
+                  );
+                },
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: paymentDetail(
+              totalPrice.toString(),
+              onSubmitTap: () {
+                double totalPrice = PersistentShoppingCart()
+                    .calculateTotalPrice();
+
+                if (totalPrice == null || totalPrice == 0) {
+                  showSnackBar(
+                    context,
+                    'Your cart is empty. Add items to place an order.',
+                  );
+                } else {
+                  _showOrderBottomSheet(context);
+                }
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Beautiful iPhone-style bottom sheet
+  void _showOrderBottomSheet(BuildContext context) {
+    final _formKey = GlobalKey<FormState>();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (_, controller) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              child: SingleChildScrollView(
+                controller: controller,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // drag handle
+                      Center(
+                        child: Container(
+                          height: 5,
+                          width: 50,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Icon(Icons.add),
-                        ),
-                        removeIcon: InkWell(
-                          onTap: () => decreaseQuantity(
-                            cartId: data.cartId ?? 0,
-                            currentQuantity: data.quantity,
-                          ),
-                          child: const Icon(Icons.remove),
                         ),
                       ),
-                    );
-                  },
+                      const Text(
+                        "Place Your Order",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildField("Name", Iconsax.user, _nameController),
+                      _buildField(
+                        "Email",
+                        Iconsax.sms,
+                        _emailController,
+                        keyboard: TextInputType.emailAddress,
+                      ),
+                      _buildField(
+                        "Phone",
+                        Iconsax.call,
+                        _phoneController,
+                        keyboard: TextInputType.phone,
+                      ),
+                      _buildField("Address", Iconsax.home, _adressController),
+                      _buildField(
+                        "Additional Notes",
+                        Iconsax.note,
+                        _additionlNotesController,
+                      ),
+                      const SizedBox(height: 30),
+                      MaterialButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            Navigator.pop(context);
+
+                            PersistentShoppingCart().clearCart();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Order placed successfully 🎉"),
+                              ),
+                            );
+                          }
+                        },
+                        color: red,
+                        height: 60,
+                        minWidth: double.infinity,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: const Text(
+                          'Confirm Order',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: paymentDetail(
-                  onSubmitTap: () => placeOrder(),
-                  snapshot.data!
-                      .fold<double>(
-                        0,
-                        (sum, item) => sum + (item.quantity * item.price),
-                      )
-                      .toStringAsFixed(2),
-                ),
-              ),
-            ],
-          );
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Reusable input field
+  Widget _buildField(
+    String hint,
+    IconData icon,
+    TextEditingController controller, {
+    TextInputType keyboard = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboard,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return "Please enter $hint";
+          }
+          return null;
         },
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: Colors.black54),
+          hintText: hint,
+          filled: true,
+          fillColor: Colors.grey[100],
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 18,
+            horizontal: 15,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide.none,
+          ),
+        ),
       ),
     );
   }
@@ -217,10 +338,10 @@ Widget paymentDetail(
         const Divider(),
         const SizedBox(height: 10),
         _buildRow('Grand Total', total, isGrand: true),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         MaterialButtonWidget(
           width: 200,
-          onTap: () => onSubmitTap,
+          onTap: onSubmitTap,
           title: 'Place Order',
         ),
       ],

@@ -40,6 +40,14 @@ class CartTile extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
+                  child: Image.network(
+                    height: 100,
+                    width: 100,
+                    imageUrl,
+
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.fastfood, size: 80),
+                  ),
                 ),
                 SizedBox(width: 10),
                 Expanded(
@@ -76,7 +84,7 @@ class CartTile extends StatelessWidget {
 
         Positioned(
           right: 20,
-          top: 50,
+          top: 60,
           child: Row(
             children: [
               removeIcon,

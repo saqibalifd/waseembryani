@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
 
@@ -12,6 +13,7 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3Z3BiZ3p0aXV6b2ZnZmF2ZHhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MDExNDgsImV4cCI6MjA2ODQ3NzE0OH0.TZ0OL-i9MCdsgFxj8D6mnK36KdORK4gbqgRD-uBRj0U',
   );
+  await PersistentShoppingCart().init();
   runApp(const MyApp());
 }
 

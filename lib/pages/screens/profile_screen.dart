@@ -65,6 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         forceMaterialTransparency: false,
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [

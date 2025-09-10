@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/categories_model.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
+import 'package:waseembrayani/pages/screens/app_main_screen.dart';
 import 'package:waseembrayani/pages/screens/view_all_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
@@ -239,7 +240,19 @@ class _HomeScreenState extends State<HomeScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
-          actions: [_profileAvatar(data.profileImage)],
+          actions: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AppMainScreen(getIndex: 2),
+                  ),
+                );
+              },
+              child: _profileAvatar(data.profileImage),
+            ),
+          ],
         );
       },
     );
@@ -282,12 +295,17 @@ class _HomeScreenState extends State<HomeScreen> {
     if (profileImage == null || profileImage.isEmpty) {
       return const Padding(
         padding: EdgeInsets.only(right: 10),
-        child: CircleAvatar(radius: 20, child: Icon(Icons.person, size: 20)),
+        child: CircleAvatar(
+          backgroundColor: Colors.transparent,
+          radius: 20,
+          child: Icon(Icons.person, size: 30),
+        ),
       );
     }
     return Padding(
       padding: const EdgeInsets.only(right: 10),
       child: CircleAvatar(
+        backgroundColor: Colors.transparent,
         radius: 20,
         backgroundImage: NetworkImage(profileImage),
       ),
