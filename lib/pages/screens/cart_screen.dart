@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_swipe_action_cell/core/cell.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:persistent_shopping_cart/model/cart_model.dart';
 import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
+import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/pages/screens/detail_screen.dart';
+import 'package:waseembrayani/service/orders_services.dart';
 import 'package:waseembrayani/service/user_services.dart';
 import 'package:waseembrayani/widgets/cart_tile.dart';
 import 'package:waseembrayani/widgets/material_button_widget.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -22,6 +27,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   double totalPrice = PersistentShoppingCart().calculateTotalPrice();
   final UserServices _userServices = UserServices();
+  final OrderService _ordersServices = OrderService();
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -46,6 +52,40 @@ class _CartScreenState extends State<CartScreen> {
         _emailController.text = userinfo.email ?? "";
         _adressController.text = userinfo.adress ?? "";
       });
+    }
+  }
+
+  Future<void> _confirmOrder(List<PersistentShoppingCartItem> cartItems) async {
+    try {
+      final products = cartItems.map((item) => item.toJson()).toList();
+
+      EasyLoading.show(
+        maskType: EasyLoadingMaskType.black,
+        indicator: LoadingAnimationWidget.stretchedDots(
+          size: 30,
+          color: Colors.white,
+        ),
+      );
+
+      await _ordersServices.placeOrder(
+        username: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        address: _adressController.text.trim(),
+        cartItems: products,
+      );
+
+      showSnackBar(context, '🎉 Order Placed Successfully!');
+      PersistentShoppingCart().clearCart(); // clear cart after order
+      Navigator.pop(context); // close bottom sheet
+    } catch (e) {
+      print('***********error is ****${e.toString()}');
+      if (e is Failure) {
+        showSnackBar(context, e.message.toString());
+      } else {
+        showSnackBar(context, 'Unexpected error');
+      }
+    } finally {
+      EasyLoading.dismiss();
     }
   }
 
@@ -86,6 +126,8 @@ class _CartScreenState extends State<CartScreen> {
                               price: item.unitPrice,
                               imageUrl: item.productImages.toString(),
                               categoryName: '',
+                              isPopular: false,
+                              isRecommended: false,
                             );
 
                             Navigator.push(
@@ -158,17 +200,22 @@ class _CartScreenState extends State<CartScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 15),
             child: paymentDetail(
               totalPrice.toString(),
-              onSubmitTap: () {
-                double totalPrice = PersistentShoppingCart()
-                    .calculateTotalPrice();
+              onSubmitTap: () async {
+                final Map<String, dynamic> cartData = PersistentShoppingCart()
+                    .getCartData();
+                // Extract items safely
+                final List<PersistentShoppingCartItem> cartItems =
+                    List<PersistentShoppingCartItem>.from(
+                      cartData['cartItems'] ?? <PersistentShoppingCartItem>[],
+                    );
 
-                if (totalPrice == null || totalPrice == 0) {
+                if (cartItems.isEmpty) {
                   showSnackBar(
                     context,
                     'Your cart is empty. Add items to place an order.',
                   );
                 } else {
-                  _showOrderBottomSheet(context);
+                  _showOrderBottomSheet(context, cartItems);
                 }
               },
             ),
@@ -178,8 +225,11 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  /// Beautiful iPhone-style bottom sheet
-  void _showOrderBottomSheet(BuildContext context) {
+  /// Bottom sheet for order details
+  void _showOrderBottomSheet(
+    BuildContext context,
+    List<PersistentShoppingCartItem> cartItems,
+  ) {
     final _formKey = GlobalKey<FormState>();
 
     showModalBottomSheet(
@@ -206,7 +256,6 @@ class _CartScreenState extends State<CartScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // drag handle
                       Center(
                         child: Container(
                           height: 5,
@@ -248,16 +297,17 @@ class _CartScreenState extends State<CartScreen> {
                       const SizedBox(height: 30),
                       MaterialButton(
                         onPressed: () async {
-                          if (_formKey.currentState!.validate()) {
-                            Navigator.pop(context);
-
-                            PersistentShoppingCart().clearCart();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Order placed successfully 🎉"),
-                              ),
-                            );
-                          }
+                          _confirmOrder(cartItems);
+                          // if (_formKey.currentState!.validate()) {
+                          //   await _confirmOrder(cartItems);
+                          //   Navigator.pop(context);
+                          //   PersistentShoppingCart().clearCart();
+                          //   ScaffoldMessenger.of(context).showSnackBar(
+                          //     const SnackBar(
+                          //       content: Text("Order placed successfully 🎉"),
+                          //     ),
+                          //   );
+                          // }
                         },
                         color: red,
                         height: 60,

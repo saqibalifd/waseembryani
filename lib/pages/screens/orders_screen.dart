@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
-import 'package:waseembrayani/core/models/favourite_product_model.dart';
-import 'package:waseembrayani/core/models/product_model.dart';
+
 import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/pages/screens/detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -13,92 +10,51 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  late Future<List<FavouriteProductModel>> futureFavProducts = Future.value([]);
-  @override
-  void initState() {
-    super.initState();
-    _intilizeData();
-  }
-
-  void _intilizeData() async {
-    try {
-      setState(() {
-        futureFavProducts = fetchFavouriteProduct();
-      });
-    } catch (e) {
-      print('error in intilizing data : $e');
-    }
-  }
-
-  Future<List<FavouriteProductModel>> fetchFavouriteProduct() async {
-    try {
-      final String userId = Supabase.instance.client.auth.currentUser!.id
-          .toString();
-      final response = await Supabase.instance.client
-          .from('favourite')
-          .select()
-          .eq('favUserId', userId);
-      return (response as List)
-          .map((json) => FavouriteProductModel.fromJson(json))
-          .toList();
-    } catch (e) {
-      print('Error in fetching products : $e');
-      return [];
-    }
-  }
-
-  Future deleteFavourite() async {
-    try {
-      print('delete favourite tap');
-    } catch (e) {
-      print('Error in fetching products : $e');
-      return [];
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         forceMaterialTransparency: true,
-
+        automaticallyImplyLeading: false,
         title: Text("Favorites", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body: FutureBuilder(
-        future: futureFavProducts,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data!.isEmpty) {
-            return Center(child: Text('Some thing went wrong'));
-          }
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
+      body:
+          // FutureBuilder(
+          //   future: futureFavProducts,
+          //   builder: (context, snapshot) {
+          //     if (snapshot.connectionState == ConnectionState.waiting) {
+          //       return Center(child: CircularProgressIndicator());
+          //     }
+          //     if (snapshot.hasError ||
+          //         !snapshot.hasData ||
+          //         snapshot.data!.isEmpty) {
+          //       return Center(child: Text('Some thing went wrong'));
+          //     }
+          //     return
+          ListView.builder(
+            itemCount: 8,
             itemBuilder: (context, index) {
-              final data = snapshot.data![index];
+              // final data = snapshot.data![index];
 
               // final data = snapshot.data![index];
               return InkWell(
                 onTap: () {
-                  final ProductModel productModel = ProductModel(
-                    id: data.id,
-                    name: data.name,
-                    description: data.description,
-                    price: data.price,
-                    imageUrl: data.imageUrl,
-                    categoryName: data.categoryName,
-                  );
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          DetailScreen(productModel: productModel),
-                    ),
-                  );
+                  // final ProductModel productModel = ProductModel(
+                  //   id: data.id,
+                  //   name: data.name,
+                  //   description: data.description,
+                  //   price: data.price,
+                  //   imageUrl: data.imageUrl,
+                  //   categoryName: data.categoryName,
+                  // );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) =>
+                  //         DetailScreen(productModel: productModel),
+                  //   ),
+                  // );
                 },
                 child: Stack(
                   children: [
@@ -119,7 +75,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                               width: 110,
                               height: 90,
                               child: Image.network(
-                                data.imageUrl,
+                                'https://static.vecteezy.com/system/resources/previews/025/250/367/non_2x/crunchy-and-delicious-fried-potato-chips-clipart-cartoon-illustration-of-tasty-fast-food-snack-generative-ai-png.png',
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Icon(Icons.fastfood, size: 40);
@@ -134,7 +90,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                   Padding(
                                     padding: EdgeInsetsGeometry.only(right: 20),
                                     child: Text(
-                                      data.name,
+                                      'Chips big pack',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
@@ -143,9 +99,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                       ),
                                     ),
                                   ),
-                                  Text(data.categoryName),
+                                  Text('chips'),
                                   Text(
-                                    "\$ ${data.price}",
+                                    "\$ ${'2'}",
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       color: Colors.pink,
@@ -163,7 +119,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
                       right: 10,
                       top: 10,
                       child: GestureDetector(
-                        onTap: deleteFavourite,
                         child: Icon(Icons.delete, color: red, size: 25),
                       ),
                     ),
@@ -171,9 +126,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 ),
               );
             },
-          );
-        },
-      ),
+          ),
+      //   },
+      // ),
     );
   }
 }
