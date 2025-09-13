@@ -1,38 +1,54 @@
+import 'package:persistent_shopping_cart/model/cart_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:waseembrayani/core/models/order_item_model.dart';
 import 'package:waseembrayani/core/models/order_model.dart';
+import 'package:waseembrayani/core/models/product_model.dart';
 
 import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/core/utils/rendom_id_generator_util.dart';
 
 class OrderService {
   final String userId = Supabase.instance.client.auth.currentUser!.id
       .toString();
+
   Future<void> placeOrder({
     required String username,
     required String email,
     required String address,
     required int quantityOrder,
     required double totalPrice,
-    required List<Map<String, dynamic>> cartItems,
+    required List<PersistentShoppingCartItem> cartitems,
   }) async {
+    final String orderId = RendomIdGeneratorUtil.generateProductId();
     final OrderModel orderModel = OrderModel(
-      userId: userId,
-      status: 'pending',
       username: username,
       email: email,
-      address: address,
-      products: cartItems, // cartItems = List<Map<String, dynamic>>
-      quantityOrder: quantityOrder,
+      adress: address,
+      status: 'pending',
+      userId: userId,
       totalPrice: totalPrice,
-      createdAt: DateTime.now().toIso8601String(),
+      quantity: quantityOrder,
+      orderId: orderId,
     );
 
     final response = await Supabase.instance.client
-        .from('myorders')
+        .from('orders')
         .insert(orderModel)
         .select();
 
-    if (response == null) {
-      throw Failure('Order placement failed');
+    for (final item in cartitems) {
+      final OrderItemModel orderItemModel = OrderItemModel(
+        name: item.productName,
+        description: item.productDetails.toString(),
+        price: item.unitPrice,
+        imageUrl: item.productImages.toString(),
+        categoryName: '',
+        orderId: orderId,
+      );
+      await Supabase.instance.client.from('order_items').insert(orderItemModel);
+      if (response == null) {
+        throw Failure('Order placement failed');
+      }
     }
   }
 

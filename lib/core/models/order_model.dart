@@ -1,54 +1,47 @@
-import 'package:waseembrayani/core/models/product_model.dart';
-
 class OrderModel {
-  final String userId;
-  final String status;
   final String username;
   final String email;
-  final String address;
+  final String adress;
+  final String status;
+  final String userId;
   final double totalPrice;
-  final int quantityOrder;
-  final List<ProductModel> products;
-  final String createdAt;
+  final int quantity;
+  final String orderId;
 
   OrderModel({
-    required this.userId,
-    required this.status,
     required this.username,
     required this.email,
-    required this.address,
+    required this.adress,
+    required this.status,
+    required this.userId,
     required this.totalPrice,
-    required this.quantityOrder,
-    required List<dynamic> products, // can accept ProductModel or Map
-    required this.createdAt,
-  }) : products = products.map((e) {
-         if (e is ProductModel) return e;
-         if (e is Map<String, dynamic>) return ProductModel.fromJson(e);
-         throw Exception("Invalid product type: $e");
-       }).toList();
+    required this.quantity,
+    required this.orderId,
+  });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
-      userId: json['userId'] ?? '',
-      status: json['status'] ?? '',
       username: json['username'] ?? '',
       email: json['email'] ?? '',
-      address: json['address'] ?? '',
-      totalPrice: json['totalPrice'] ?? 0.00,
-      quantityOrder: json['quantityOrder'] ?? 0,
-      products: (json['products'] as List<dynamic>? ?? []),
-      createdAt: json['created_at'] ?? '',
+      adress: json['adress'] ?? '',
+      status: json['status'] ?? '',
+      userId: json['userId'] ?? '',
+      totalPrice: (json['totalPrice'] != null)
+          ? (json['totalPrice'] as num).toDouble()
+          : 0.0,
+      quantity: json['quantity'] ?? 0,
+      orderId: json['orderId'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'status': status,
     'username': username,
     'email': email,
-    'address': address,
+    'adress': adress,
+    'status': status,
+    'userId': userId,
     'totalPrice': totalPrice,
-    'products': products.map((e) => e.toJson()).toList(),
-    'created_at': createdAt,
+    'quantity': quantity,
+    'orderId': orderId,
   };
 }

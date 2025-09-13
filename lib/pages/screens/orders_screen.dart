@@ -59,7 +59,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           return ListView.builder(
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
-              final data = snapshot.data![index].products.first;
+              final data = snapshot.data![index].adress;
 
               return Padding(
                 padding: EdgeInsetsGeometry.symmetric(
@@ -78,7 +78,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         width: 110,
                         height: 90,
                         child: Image.network(
-                          data.imageUrl.toString(),
+                          data,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(Icons.fastfood, size: 40);
@@ -93,7 +93,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             Padding(
                               padding: EdgeInsetsGeometry.only(right: 20),
                               child: Text(
-                                data.name.toString(),
+                                data,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -102,9 +102,9 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 ),
                               ),
                             ),
-                            Text(data.name),
+                            Text(data),
                             Text(
-                              "\$ ${data.price}",
+                              "\$ ${data}",
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.pink,

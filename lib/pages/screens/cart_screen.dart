@@ -61,18 +61,6 @@ class _CartScreenState extends State<CartScreen> {
     double totalPrice,
   ) async {
     try {
-      final products = cartItems
-          .map(
-            (item) => {
-              "productId": item.productId,
-              "name": item.productName,
-              "description": item.productDescription ?? "",
-              "price": item.unitPrice,
-              "imageUrl": item.productThumbnail ?? "",
-            },
-          )
-          .toList();
-
       EasyLoading.show(
         maskType: EasyLoadingMaskType.black,
         indicator: LoadingAnimationWidget.stretchedDots(
@@ -85,10 +73,11 @@ class _CartScreenState extends State<CartScreen> {
         username: _nameController.text.trim(),
         email: _emailController.text.trim(),
         address: _adressController.text.trim(),
-        cartItems: products,
+        cartitems: cartItems,
         quantityOrder: totalItems,
         totalPrice: totalPrice,
       );
+
       Navigator.pop(context);
       PersistentShoppingCart().clearCart();
 
