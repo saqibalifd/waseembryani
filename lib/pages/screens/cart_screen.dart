@@ -15,7 +15,6 @@ import 'package:waseembrayani/service/user_services.dart';
 import 'package:waseembrayani/widgets/cart_tile.dart';
 import 'package:waseembrayani/widgets/material_button_widget.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -26,6 +25,7 @@ class CartScreen extends StatefulWidget {
 
 class _CartScreenState extends State<CartScreen> {
   double totalPrice = PersistentShoppingCart().calculateTotalPrice();
+  final int totalProduct = 0;
   final UserServices _userServices = UserServices();
   final OrderService _ordersServices = OrderService();
 
@@ -55,9 +55,23 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  Future<void> _confirmOrder(List<PersistentShoppingCartItem> cartItems) async {
+  Future<void> _confirmOrder(
+    List<PersistentShoppingCartItem> cartItems,
+    int totalItems,
+    double totalPrice,
+  ) async {
     try {
-      final products = cartItems.map((item) => item.toJson()).toList();
+      final products = cartItems
+          .map(
+            (item) => {
+              "productId": item.productId,
+              "name": item.productName,
+              "description": item.productDescription ?? "",
+              "price": item.unitPrice,
+              "imageUrl": item.productThumbnail ?? "",
+            },
+          )
+          .toList();
 
       EasyLoading.show(
         maskType: EasyLoadingMaskType.black,
@@ -72,13 +86,15 @@ class _CartScreenState extends State<CartScreen> {
         email: _emailController.text.trim(),
         address: _adressController.text.trim(),
         cartItems: products,
+        quantityOrder: totalItems,
+        totalPrice: totalPrice,
       );
+      Navigator.pop(context);
+      PersistentShoppingCart().clearCart();
 
       showSnackBar(context, '🎉 Order Placed Successfully!');
-      PersistentShoppingCart().clearCart(); // clear cart after order
-      Navigator.pop(context); // close bottom sheet
     } catch (e) {
-      print('***********error is ****${e.toString()}');
+      print('**********${e.toString()}*****************');
       if (e is Failure) {
         showSnackBar(context, e.message.toString());
       } else {
@@ -117,6 +133,7 @@ class _CartScreenState extends State<CartScreen> {
                       itemCount: cartItems.length,
                       itemBuilder: (context, index) {
                         final item = cartItems[index];
+                        final totalProduct = cartItems.length;
                         return InkWell(
                           onTap: () {
                             final ProductModel productModel = ProductModel(
@@ -203,11 +220,14 @@ class _CartScreenState extends State<CartScreen> {
               onSubmitTap: () async {
                 final Map<String, dynamic> cartData = PersistentShoppingCart()
                     .getCartData();
-                // Extract items safely
+
                 final List<PersistentShoppingCartItem> cartItems =
                     List<PersistentShoppingCartItem>.from(
                       cartData['cartItems'] ?? <PersistentShoppingCartItem>[],
                     );
+
+                // print('********${cartItems.length}');
+                // print('*************${totalPrice.toString()}');
 
                 if (cartItems.isEmpty) {
                   showSnackBar(
@@ -215,7 +235,12 @@ class _CartScreenState extends State<CartScreen> {
                     'Your cart is empty. Add items to place an order.',
                   );
                 } else {
-                  _showOrderBottomSheet(context, cartItems);
+                  _showOrderBottomSheet(
+                    context,
+                    cartItems,
+                    cartItems.length,
+                    totalPrice,
+                  );
                 }
               },
             ),
@@ -229,6 +254,8 @@ class _CartScreenState extends State<CartScreen> {
   void _showOrderBottomSheet(
     BuildContext context,
     List<PersistentShoppingCartItem> cartItems,
+    int totalItems,
+    double totalPrice,
   ) {
     final _formKey = GlobalKey<FormState>();
 
@@ -297,17 +324,19 @@ class _CartScreenState extends State<CartScreen> {
                       const SizedBox(height: 30),
                       MaterialButton(
                         onPressed: () async {
-                          _confirmOrder(cartItems);
-                          // if (_formKey.currentState!.validate()) {
-                          //   await _confirmOrder(cartItems);
-                          //   Navigator.pop(context);
-                          //   PersistentShoppingCart().clearCart();
-                          //   ScaffoldMessenger.of(context).showSnackBar(
-                          //     const SnackBar(
-                          //       content: Text("Order placed successfully 🎉"),
-                          //     ),
-                          //   );
-                          // }
+                          if (_formKey.currentState!.validate()) {
+                            final int quantityOrders = cartItems.length;
+
+                            await _confirmOrder(
+                              cartItems,
+                              totalItems,
+                              totalPrice,
+                            );
+                            setState(() {
+                              totalPrice = PersistentShoppingCart()
+                                  .calculateTotalPrice();
+                            });
+                          }
                         },
                         color: red,
                         height: 60,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:waseembrayani/core/models/order_model.dart';
 
-import 'package:waseembrayani/core/utils/consts.dart';
+import 'package:waseembrayani/service/orders_services.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -10,6 +11,24 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
+  final OrderService _orderService = OrderService();
+  late Future<List<OrderModel>> futureOrders = Future.value([]);
+  @override
+  void initState() {
+    super.initState();
+    _intilizeData();
+  }
+
+  void _intilizeData() async {
+    try {
+      setState(() {
+        futureOrders = _orderService.fetchOrders();
+      });
+    } catch (e) {
+      print('error in intilizing data : $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,118 +36,91 @@ class _OrdersScreenState extends State<OrdersScreen> {
         centerTitle: true,
         forceMaterialTransparency: true,
         automaticallyImplyLeading: false,
-        title: Text("Favorites", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text("Orders", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      body:
-          // FutureBuilder(
-          //   future: futureFavProducts,
-          //   builder: (context, snapshot) {
-          //     if (snapshot.connectionState == ConnectionState.waiting) {
-          //       return Center(child: CircularProgressIndicator());
-          //     }
-          //     if (snapshot.hasError ||
-          //         !snapshot.hasData ||
-          //         snapshot.data!.isEmpty) {
-          //       return Center(child: Text('Some thing went wrong'));
-          //     }
-          //     return
-          ListView.builder(
-            itemCount: 8,
-            itemBuilder: (context, index) {
-              // final data = snapshot.data![index];
+      body: FutureBuilder(
+        future: futureOrders,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
 
-              // final data = snapshot.data![index];
-              return InkWell(
-                onTap: () {
-                  // final ProductModel productModel = ProductModel(
-                  //   id: data.id,
-                  //   name: data.name,
-                  //   description: data.description,
-                  //   price: data.price,
-                  //   imageUrl: data.imageUrl,
-                  //   categoryName: data.categoryName,
-                  // );
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) =>
-                  //         DetailScreen(productModel: productModel),
-                  //   ),
-                  // );
-                },
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: EdgeInsetsGeometry.symmetric(
-                        horizontal: 15,
-                        vertical: 5,
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No orders found'));
+          }
+
+          // 👇 Now it is safe to print and use snapshot.data
+          print('Orders length: ${snapshot.data!.length}');
+
+          return ListView.builder(
+            itemCount: snapshot.data!.length,
+            itemBuilder: (context, index) {
+              final data = snapshot.data![index].products.first;
+
+              return Padding(
+                padding: EdgeInsetsGeometry.symmetric(
+                  horizontal: 15,
+                  vertical: 5,
+                ),
+                child: Container(
+                  padding: EdgeInsets.all(10),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 110,
+                        height: 90,
+                        child: Image.network(
+                          data.imageUrl.toString(),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(Icons.fastfood, size: 40);
+                          },
                         ),
-                        child: Row(
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 110,
-                              height: 90,
-                              child: Image.network(
-                                'https://static.vecteezy.com/system/resources/previews/025/250/367/non_2x/crunchy-and-delicious-fried-potato-chips-clipart-cartoon-illustration-of-tasty-fast-food-snack-generative-ai-png.png',
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(Icons.fastfood, size: 40);
-                                },
+                            Padding(
+                              padding: EdgeInsetsGeometry.only(right: 20),
+                              child: Text(
+                                data.name.toString(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 17,
+                                ),
                               ),
                             ),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsetsGeometry.only(right: 20),
-                                    child: Text(
-                                      'Chips big pack',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 17,
-                                      ),
-                                    ),
-                                  ),
-                                  Text('chips'),
-                                  Text(
-                                    "\$ ${'2'}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.pink,
-                                    ),
-                                  ),
-                                ],
+                            Text(data.name),
+                            Text(
+                              "\$ ${data.price}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.pink,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-
-                    Positioned(
-                      right: 10,
-                      top: 10,
-                      child: GestureDetector(
-                        child: Icon(Icons.delete, color: red, size: 25),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
-          ),
-      //   },
-      // ),
+          );
+        },
+      ),
     );
   }
 }
