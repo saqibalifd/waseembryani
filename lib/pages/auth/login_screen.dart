@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/pages/auth/forgot_password_screen.dart';
 import 'package:waseembrayani/pages/auth/signup_screen.dart';
 import 'package:waseembrayani/pages/screens/app_main_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
@@ -156,6 +158,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? Icons.visibility_off_sharp
                             : Icons.visibility,
                       ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 5),
+                Align(
+                  alignment: AlignmentGeometry.centerRight,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ForgotPasswordScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Forgot password?',
+                      style: TextStyle(color: Colors.blue),
                     ),
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/service/product_services.dart';
+import 'package:waseembrayani/widgets/back_button_widget.dart';
 import 'package:waseembrayani/widgets/product_card.dart';
 import 'package:waseembrayani/widgets/shimmer/product_grid_card_shimmer.dart';
 
@@ -90,7 +91,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
     print(widget.isPopular);
 
     return Scaffold(
-      backgroundColor: Colors.blue[50],
+      backgroundColor: Colors.white,
 
       /// AppBar title changes depending on isPopular flag
       appBar: AppBar(
@@ -98,6 +99,7 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
         forceMaterialTransparency: true,
         automaticallyImplyLeading: false,
         backgroundColor: Colors.blue[50],
+
         title: Text(
           widget.isPopular == true ? 'Popular Products' : 'All Products',
           style: TextStyle(fontWeight: FontWeight.bold),

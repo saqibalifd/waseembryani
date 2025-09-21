@@ -6,6 +6,7 @@ import 'package:readmore/readmore.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/pages/screens/app_main_screen.dart';
+import 'package:waseembrayani/widgets/back_button_widget.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -42,20 +43,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Back Button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      height: 40,
-                      width: 40,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white,
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new, size: 18),
-                      ),
-                    ),
-                  ),
+                  BackButtonWidget(onTap: () => Navigator.pop(context)),
                   // More Icon
                   Stack(
                     children: [
@@ -73,7 +61,7 @@ class _DetailScreenState extends State<DetailScreen> {
                           width: 40,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
-                            color: Colors.white,
+                            color: red.withValues(alpha: .1),
                           ),
                           child: Center(child: Icon(Iconsax.shopping_cart)),
                         ),

@@ -5,6 +5,7 @@ import 'package:waseembrayani/core/utils/failure.dart';
 
 class UserServices {
   final supabase = Supabase.instance.client.from('users');
+
   // this function will store user information on supabase
   Future<void> storeUserInfo({
     required String email,
@@ -48,5 +49,26 @@ class UserServices {
   }
 
   // this function will update user information
-  Future updateUserInfo() async {}
+  Future updateUserInfo(String name, String address) async {
+    try {
+      final String userId = Supabase.instance.client.auth.currentUser!.id
+          .toString();
+      await supabase
+          .update({'name': name, 'adress': address})
+          .eq('userid', userId);
+    } catch (e) {
+      throw SupabaseExceptionHandler.handle(e);
+    }
+  }
+
+  // this function will delete user information
+  Future deleteUserInfo() async {
+    try {
+      final String userId = Supabase.instance.client.auth.currentUser!.id
+          .toString();
+      await supabase.delete().eq('userid', userId);
+    } catch (e) {
+      throw SupabaseExceptionHandler.handle(e);
+    }
+  }
 }

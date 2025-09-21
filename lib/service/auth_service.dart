@@ -56,11 +56,41 @@ class AuthService {
     }
   }
 
+  //forgot password
+  Future<void> forgotPassword(BuildContext context, String email) async {
+    try {
+      await supabaseClient.auth.resetPasswordForEmail(
+        email,
+        // redirectTo: 'https://your-app-url.com/reset-password',
+      );
+    } catch (e) {
+      throw SupabaseExceptionHandler.handle(e);
+    }
+  }
+
   //logout function
   Future<void> logout(BuildContext context) async {
     try {
       await supabaseClient.auth.signOut();
       if (!context.mounted) return;
+    } catch (e) {
+      throw SupabaseExceptionHandler.handle(e);
+    }
+  }
+
+  // delete user function (requires service_role key)
+  Future<void> deleteUser() async {
+    try {
+      // Create a client using service_role key (⚠️ do not expose in production client)
+      final adminClient = SupabaseClient(
+        'https://ywgpbgztiuzofgfavdxb.supabase.co', //project -> setting ->data api ->project url
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3Z3BiZ3p0aXV6b2ZnZmF2ZHhiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjkwMTE0OCwiZXhwIjoyMDY4NDc3MTQ4fQ.WrrBMU465Mg_hLmyq4nOHCddIYWPMfx_6723tnLV1pc', //project -> setting ->api key ->service_role
+      );
+      final String userId = Supabase.instance.client.auth.currentUser!.id
+          .toString();
+
+      await adminClient.auth.admin.deleteUser(userId);
+      await userServices.deleteUserInfo();
     } catch (e) {
       throw SupabaseExceptionHandler.handle(e);
     }

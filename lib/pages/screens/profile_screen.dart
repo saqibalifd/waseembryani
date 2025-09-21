@@ -4,6 +4,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/pages/auth/login_screen.dart';
 import 'package:waseembrayani/pages/policies/privacy_policy_screen.dart';
 import 'package:waseembrayani/pages/policies/terms_conditions_screen.dart';
 import 'package:waseembrayani/pages/screens/account_setting_screen.dart';
@@ -50,6 +51,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
       await _authService.logout(context);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
     } catch (e) {
       if (e is Failure) {
         showSnackBar(context, e.message.toString());
@@ -64,6 +69,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
+
       appBar: AppBar(
         title: Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -82,30 +89,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(height: 25),
-                      SizedBox(
-                        height: 110,
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.grey,
-                              radius: 50,
-                              child: Icon(Icons.person, size: 50),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: CircleAvatar(
-                                backgroundColor: Colors.white,
-                                radius: 15,
-                                child: Icon(
-                                  Icons.add_a_photo_outlined,
-                                  color: red,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      CircleAvatar(
+                        backgroundColor: Colors.grey,
+                        radius: 50,
+                        child: Icon(Icons.person, size: 50),
                       ),
                       SizedBox(height: 15),
                       Text(
@@ -138,38 +125,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(height: 25),
-                    SizedBox(
-                      height: 110,
-                      child: Stack(
-                        children: [
-                          data.profileImage == null || data.profileImage == ''
-                              ? CircleAvatar(
-                                  radius: 50,
-                                  backgroundColor: Colors.grey,
-                                  child: Icon(Icons.person, size: 50),
-                                )
-                              : CircleAvatar(
-                                  radius: 50,
-                                  backgroundImage: NetworkImage(
-                                    data.profileImage,
-                                  ),
-                                ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              radius: 15,
-                              child: Icon(
-                                Icons.add_a_photo_outlined,
-                                color: red,
-                                size: 18,
-                              ),
-                            ),
+                    data.profileImage == null || data.profileImage == ''
+                        ? CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.grey,
+                            child: Icon(Icons.person, size: 50),
+                          )
+                        : CircleAvatar(
+                            radius: 50,
+                            backgroundImage: NetworkImage(data.profileImage),
                           ),
-                        ],
-                      ),
-                    ),
                     SizedBox(height: 15),
                     Text(
                       data.name,
