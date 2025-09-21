@@ -66,6 +66,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
       );
       showSnackBar(context, 'User Profile is updated');
     } catch (e) {
+      print(e.toString());
       if (e is Failure) {
         showSnackBar(context, e.message.toString());
       } else {
@@ -133,13 +134,16 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
                             radius: 50,
                             backgroundImage: NetworkImage(profileImage),
                           ),
-                    CircleAvatar(
-                      backgroundColor: Colors.white.withValues(alpha: .6),
-                      radius: 50,
-                      child: Icon(
-                        Icons.add_a_photo_outlined,
-                        color: red,
-                        size: 25,
+                    GestureDetector(
+                      onTap: () => showImagePickerBottomSheet(context),
+                      child: CircleAvatar(
+                        backgroundColor: Colors.white.withValues(alpha: .6),
+                        radius: 50,
+                        child: Icon(
+                          Icons.add_a_photo_outlined,
+                          color: red,
+                          size: 25,
+                        ),
                       ),
                     ),
                   ],
@@ -345,6 +349,108 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       child: const Text("Delete"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  //image picker bottom sheet
+  void showImagePickerBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag indicator
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              const Icon(Icons.image, color: Colors.blue, size: 60),
+              const SizedBox(height: 15),
+
+              const Text(
+                "Choose Image",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              const Text(
+                "Select an image from your gallery or take a new one using the camera.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+              const SizedBox(height: 25),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _userServices.pickImageFromCamera();
+                      },
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text("Camera"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _userServices.pickImageFromGallery();
+                      },
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text("Gallery"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
                     ),
                   ),
                 ],

@@ -74,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
-        forceMaterialTransparency: false,
+        forceMaterialTransparency: true,
         automaticallyImplyLeading: false,
       ),
       body: Column(
