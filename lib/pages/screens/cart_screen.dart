@@ -9,6 +9,7 @@ import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/pages/screens/app_main_screen.dart';
 import 'package:waseembrayani/pages/screens/detail_screen.dart';
 import 'package:waseembrayani/service/orders_services.dart';
 import 'package:waseembrayani/service/user_services.dart';
@@ -80,7 +81,13 @@ class _CartScreenState extends State<CartScreen> {
 
       Navigator.pop(context);
       PersistentShoppingCart().clearCart();
-
+      setState(() {
+        totalPrice = PersistentShoppingCart().calculateTotalPrice();
+      });
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => AppMainScreen(getIndex: 0)),
+      );
       showSnackBar(context, '🎉 Order Placed Successfully!');
     } catch (e) {
       print('**********${e.toString()}*****************');
@@ -122,7 +129,6 @@ class _CartScreenState extends State<CartScreen> {
                       itemCount: cartItems.length,
                       itemBuilder: (context, index) {
                         final item = cartItems[index];
-                        final totalProduct = cartItems.length;
                         return InkWell(
                           onTap: () {
                             final ProductModel productModel = ProductModel(
@@ -214,9 +220,6 @@ class _CartScreenState extends State<CartScreen> {
                     List<PersistentShoppingCartItem>.from(
                       cartData['cartItems'] ?? <PersistentShoppingCartItem>[],
                     );
-
-                // print('********${cartItems.length}');
-                // print('*************${totalPrice.toString()}');
 
                 if (cartItems.isEmpty) {
                   showSnackBar(
@@ -314,17 +317,11 @@ class _CartScreenState extends State<CartScreen> {
                       MaterialButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            final int quantityOrders = cartItems.length;
-
                             await _confirmOrder(
                               cartItems,
                               totalItems,
                               totalPrice,
                             );
-                            setState(() {
-                              totalPrice = PersistentShoppingCart()
-                                  .calculateTotalPrice();
-                            });
                           }
                         },
                         color: red,
@@ -392,27 +389,29 @@ Widget paymentDetail(
   String discount = '0',
   Function()? onSubmitTap,
 }) {
-  return SizedBox(
-    height: 220,
-    width: double.maxFinite,
-    child: Column(
-      children: [
-        _buildRow('Total', total),
-        const SizedBox(height: 10),
-        _buildRow('Shipping Charge', shippingCharges),
-        const SizedBox(height: 10),
-        _buildRow('Discount', discount),
-        const SizedBox(height: 10),
-        const Divider(),
-        const SizedBox(height: 10),
-        _buildRow('Grand Total', total, isGrand: true),
-        const SizedBox(height: 20),
-        MaterialButtonWidget(
-          width: 200,
-          onTap: onSubmitTap,
-          title: 'Place Order',
-        ),
-      ],
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: SizedBox(
+      width: double.maxFinite,
+      child: Column(
+        children: [
+          _buildRow('Total', total),
+          const SizedBox(height: 10),
+          _buildRow('Shipping Charge', shippingCharges),
+          const SizedBox(height: 10),
+          _buildRow('Discount', discount),
+          const SizedBox(height: 10),
+          const Divider(),
+          const SizedBox(height: 10),
+          _buildRow('Grand Total', total, isGrand: true),
+          const SizedBox(height: 20),
+          MaterialButtonWidget(
+            width: 200,
+            onTap: onSubmitTap,
+            title: 'Place Order',
+          ),
+        ],
+      ),
     ),
   );
 }

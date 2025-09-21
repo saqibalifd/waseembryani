@@ -94,12 +94,14 @@ class _ViewAllScreenState extends State<ViewAllScreen> {
 
       /// AppBar title changes depending on isPopular flag
       appBar: AppBar(
+        centerTitle: true,
+        forceMaterialTransparency: true,
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.blue[50],
         title: Text(
           widget.isPopular == true ? 'Popular Products' : 'All Products',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blue[50],
-        forceMaterialTransparency: true,
-        centerTitle: true,
       ),
 
       /// FutureBuilder for product list

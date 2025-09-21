@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:waseembrayani/core/models/order_model.dart';
+import 'package:waseembrayani/core/models/order_item_model.dart';
+import 'package:waseembrayani/core/utils/consts.dart';
 
 import 'package:waseembrayani/service/orders_services.dart';
+import 'package:waseembrayani/widgets/shimmer/shimmer_tile.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -12,7 +14,7 @@ class OrdersScreen extends StatefulWidget {
 
 class _OrdersScreenState extends State<OrdersScreen> {
   final OrderService _orderService = OrderService();
-  late Future<List<OrderModel>> futureOrders = Future.value([]);
+  late Future<List<OrderItemModel>> futureOrders = Future.value([]);
   @override
   void initState() {
     super.initState();
@@ -42,7 +44,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         future: futureOrders,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return ShimmerTile();
           }
 
           if (snapshot.hasError) {
@@ -59,7 +61,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
           return ListView.builder(
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
-              final data = snapshot.data![index].adress;
+              final data = snapshot.data![index];
 
               return Padding(
                 padding: EdgeInsetsGeometry.symmetric(
@@ -78,7 +80,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         width: 110,
                         height: 90,
                         child: Image.network(
-                          data,
+                          data.imageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Icon(Icons.fastfood, size: 40);
@@ -93,7 +95,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                             Padding(
                               padding: EdgeInsetsGeometry.only(right: 20),
                               child: Text(
-                                data,
+                                data.name,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -102,13 +104,22 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                 ),
                               ),
                             ),
-                            Text(data),
-                            Text(
-                              "\$ ${data}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.pink,
-                              ),
+                            SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "\$ ${data.price}",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: red,
+                                  ),
+                                ),
+                                Text(
+                                  data.status,
+                                  style: TextStyle(color: Colors.orange),
+                                ),
+                              ],
                             ),
                           ],
                         ),

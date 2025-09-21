@@ -7,6 +7,8 @@ class OrderItemModel {
   final bool isPopular;
   final bool isRecommended;
   final String orderId;
+  final String userId;
+  final String status;
 
   OrderItemModel({
     required this.name,
@@ -17,6 +19,8 @@ class OrderItemModel {
     this.isPopular = false,
     this.isRecommended = false,
     required this.orderId,
+    required this.userId,
+    required this.status,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,8 @@ class OrderItemModel {
       isPopular: json['isPopular'] ?? false,
       isRecommended: json['isRecommended'] ?? false,
       orderId: json['orderId'] ?? '',
+      userId: json['userId'] ?? '',
+      status: json['status'] ?? '',
     );
   }
 
@@ -41,5 +47,7 @@ class OrderItemModel {
     'isPopular': isPopular,
     'isRecommended': isRecommended,
     'orderId': orderId,
+    'userId': userId,
+    'status': status,
   };
 }

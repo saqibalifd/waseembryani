@@ -2,8 +2,6 @@ import 'package:persistent_shopping_cart/model/cart_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/order_item_model.dart';
 import 'package:waseembrayani/core/models/order_model.dart';
-import 'package:waseembrayani/core/models/product_model.dart';
-
 import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/core/utils/rendom_id_generator_util.dart';
 
@@ -41,9 +39,11 @@ class OrderService {
         name: item.productName,
         description: item.productDetails.toString(),
         price: item.unitPrice,
-        imageUrl: item.productImages.toString(),
+        imageUrl: item.productThumbnail.toString(),
         categoryName: '',
         orderId: orderId,
+        userId: userId,
+        status: 'pending',
       );
       await Supabase.instance.client.from('order_items').insert(orderItemModel);
       if (response == null) {
@@ -53,16 +53,16 @@ class OrderService {
   }
 
   // this functio will fetch user information from supabase
-  Future<List<OrderModel>> fetchOrders() async {
+  Future<List<OrderItemModel>> fetchOrders() async {
     try {
       final data =
           await Supabase.instance.client
-                  .from('myorders')
+                  .from('order_items')
                   .select()
                   .eq('userId', userId)
               as List<dynamic>;
       print('*********thhis is data *****************${data}');
-      return data.map((json) => OrderModel.fromJson(json)).toList();
+      return data.map((json) => OrderItemModel.fromJson(json)).toList();
     } catch (e) {
       return [];
     }

@@ -4,6 +4,9 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/pages/policies/privacy_policy_screen.dart';
+import 'package:waseembrayani/pages/policies/terms_conditions_screen.dart';
+import 'package:waseembrayani/pages/screens/account_setting_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/service/user_services.dart';
 import 'package:waseembrayani/widgets/snackbar.dart';
@@ -84,6 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         child: Stack(
                           children: [
                             CircleAvatar(
+                              backgroundColor: Colors.grey,
                               radius: 50,
                               child: Icon(Icons.person, size: 50),
                             ),
@@ -141,6 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           data.profileImage == null || data.profileImage == ''
                               ? CircleAvatar(
                                   radius: 50,
+                                  backgroundColor: Colors.grey,
                                   child: Icon(Icons.person, size: 50),
                                 )
                               : CircleAvatar(
@@ -188,6 +193,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: 20),
           ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AccountSettingScreen()),
+              );
+            },
+            leading: Icon(Icons.person_outline, color: red),
+            title: Text(
+              'Account',
+              style: TextStyle(fontWeight: FontWeight.w300),
+            ),
+
+            trailing: Icon(Icons.navigate_next, color: red),
+          ),
+          ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PrivacyPolicyScreen()),
+              );
+            },
             leading: Icon(Icons.lock_outline, color: red),
             title: Text(
               'Privacy Policy',
@@ -197,6 +223,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             trailing: Icon(Icons.navigate_next, color: red),
           ),
           ListTile(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TermsConditionsScreen(),
+                ),
+              );
+            },
             leading: Icon(Icons.file_copy_outlined, color: red),
             title: Text(
               'Terms and Conditions',
@@ -205,6 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             trailing: Icon(Icons.navigate_next, color: red),
           ),
+          Divider(color: red),
           ListTile(
             onTap: _logout,
             leading: Icon(Icons.logout, color: red),
