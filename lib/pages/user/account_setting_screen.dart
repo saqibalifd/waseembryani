@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:waseembrayani/core/models/user_model.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/models/user_model.dart';
 import 'package:waseembrayani/pages/auth/forgot_password_screen.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
 import 'package:waseembrayani/pages/user/app_main_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/service/user_services.dart';
+import 'package:waseembrayani/utils/consts.dart';
+import 'package:waseembrayani/utils/failure.dart';
 import 'package:waseembrayani/utils/snackbar.dart';
 
+/// Account Setting Screen
+/// - Displays user info (name, email, address, profile image)
+/// - Allows updating user details
+/// - Provides password reset option
+/// - Supports account deletion
 class AccountSettingScreen extends StatefulWidget {
   const AccountSettingScreen({super.key});
 
@@ -20,18 +25,27 @@ class AccountSettingScreen extends StatefulWidget {
 }
 
 class _AccountSettingScreenState extends State<AccountSettingScreen> {
+  /// Step 1: Create instances of required services
   final UserServices _userServices = UserServices();
   final AuthService _authService = AuthService();
+
+  /// Step 2: Text controllers for input fields
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+
+  /// Step 3: Profile image url (empty initially)
   String profileImage = '';
+
   @override
   void initState() {
     super.initState();
+
+    /// Step 4: Load user info when screen initializes
     _loadUserInfo();
   }
 
+  /// Step 5: Fetch user info from API and set data into controllers
   void _loadUserInfo() async {
     final List<UserModel> users = await _userServices.fetchUserInfo();
 
@@ -46,8 +60,10 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
     }
   }
 
+  /// Step 6: Update user info (name + address)
   void _updateUserInfo() async {
     try {
+      // Show loading overlay
       EasyLoading.show(
         maskType: EasyLoadingMaskType.black,
         indicator: LoadingAnimationWidget.stretchedDots(
@@ -56,16 +72,22 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
         ),
       );
 
+      // Call update API
       await _userServices.updateUserInfo(
         nameController.text,
         addressController.text,
       );
+
+      // Navigate back to main screen (Account tab)
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => AppMainScreen(getIndex: 2)),
       );
+
+      // Show success snackbar
       showSnackBar(context, 'User Profile is updated');
     } catch (e) {
+      // Handle error properly
       print(e.toString());
       if (e is Failure) {
         showSnackBar(context, e.message.toString());
@@ -73,10 +95,11 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
         showSnackBar(context, 'Unexpected error');
       }
     } finally {
-      EasyLoading.dismiss();
+      EasyLoading.dismiss(); // Close loader
     }
   }
 
+  /// Step 7: Delete user account
   void _deleteUserAccount() async {
     try {
       EasyLoading.show(
@@ -87,11 +110,16 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
         ),
       );
 
+      // Delete account via AuthService
       await _authService.deleteUser();
+
+      // Redirect to Login Screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
+
+      // Show confirmation
       showSnackBar(context, "User account deleted successfully");
     } catch (e) {
       if (e is Failure) {
@@ -107,6 +135,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      /// Step 8: AppBar
       appBar: AppBar(
         title: Text('Account', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
@@ -114,16 +143,20 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
         automaticallyImplyLeading: false,
       ),
 
+      /// Step 9: Scrollable body with profile + form fields
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
               SizedBox(height: 25),
+
+              /// --- Profile Picture with overlay button ---
               SizedBox(
                 height: 110,
                 child: Stack(
                   children: [
+                    // Display profile image or placeholder
                     profileImage == null || profileImage == ''
                         ? CircleAvatar(
                             radius: 50,
@@ -134,6 +167,8 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
                             radius: 50,
                             backgroundImage: NetworkImage(profileImage),
                           ),
+
+                    // Overlay to change image
                     GestureDetector(
                       onTap: () => showImagePickerBottomSheet(context),
                       child: CircleAvatar(
@@ -168,7 +203,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
               ),
               const SizedBox(height: 20),
 
-              /// --- Email field ---
+              /// --- Email field (read only) ---
               TextFormField(
                 readOnly: true,
                 controller: emailController,
@@ -211,6 +246,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
               Divider(color: red),
               const SizedBox(height: 10),
 
+              /// --- Change Password option ---
               ListTile(
                 onTap: () {
                   Navigator.push(
@@ -226,9 +262,10 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
                   'Change Password',
                   style: TextStyle(fontWeight: FontWeight.w300),
                 ),
-
                 trailing: Icon(Icons.navigate_next, color: red),
               ),
+
+              /// --- Delete Account option ---
               ListTile(
                 tileColor: red,
                 onTap: () => showDeleteAccountBottomSheet(context),
@@ -245,6 +282,8 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
           ),
         ),
       ),
+
+      /// Step 10: Update button (only visible if email is loaded)
       bottomNavigationBar: emailController.text == ""
           ? SizedBox()
           : Padding(
@@ -268,6 +307,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
     );
   }
 
+  /// Step 11: Delete Account Confirmation BottomSheet
   void showDeleteAccountBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -292,6 +332,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Drag indicator
               Container(
                 width: 40,
                 height: 5,
@@ -318,6 +359,8 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
                 style: TextStyle(fontSize: 14, color: Colors.black54),
               ),
               const SizedBox(height: 25),
+
+              /// Cancel + Delete buttons
               Row(
                 children: [
                   Expanded(
@@ -360,7 +403,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
     );
   }
 
-  //image picker bottom sheet
+  /// Step 12: Image Picker BottomSheet (Camera / Gallery options)
   void showImagePickerBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -416,6 +459,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
               ),
               const SizedBox(height: 25),
 
+              /// Camera + Gallery buttons
               Row(
                 children: [
                   Expanded(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/utils/failure.dart';
 import 'package:waseembrayani/pages/auth/forgot_password_screen.dart';
 import 'package:waseembrayani/pages/auth/signup_screen.dart';
 import 'package:waseembrayani/pages/user/app_main_screen.dart';
@@ -10,8 +10,10 @@ import 'package:waseembrayani/widgets/auth_button_widget.dart';
 import 'package:waseembrayani/utils/snackbar.dart';
 
 /// Login Screen
-/// Allows user to login with email and password.
-/// Uses AuthService for authentication and shows error messages with snackbar.
+/// ✅ Allows user to login with email and password.
+/// ✅ Uses AuthService for authentication.
+/// ✅ Displays error messages using custom Snackbar.
+/// ✅ Shows loading animation while login request is in progress.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,62 +22,68 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  /// --- Form key for validation ---
+  /// --- Step 1: Define Form Key ---
+  /// This key will be used for validating the login form.
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  /// --- Controllers for text fields ---
+  /// --- Step 2: Define Text Controllers ---
+  /// These controllers hold the text entered in email & password fields.
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  /// --- Auth service instance ---
+  /// --- Step 3: Initialize AuthService ---
+  /// AuthService will handle the actual login request to Supabase/Auth API.
   final AuthService _authService = AuthService();
 
-  /// --- To toggle password visibility ---
+  /// --- Step 4: Track Password Visibility ---
+  /// Used for showing/hiding password in the input field.
   bool isPasswordHidden = true;
 
-  /// Login method
-  /// 1. Validates form
+  /// --- Step 5: Define Login Method ---
+  /// 1. Validates input
   /// 2. Shows loading animation
   /// 3. Calls AuthService to log user in
   /// 4. On success → Navigate to AppMainScreen
   /// 5. On failure → Show error message
   void _login() async {
+    // --- Extract text values from controllers ---
     String email = emailController.text.trim();
     String password = passwordController.text.trim();
 
     try {
-      // Show loading indicator while login request is in progress
+      // --- Step 5.1: Show loading animation ---
       EasyLoading.show(
-        maskType: EasyLoadingMaskType.black, // dim background
+        maskType: EasyLoadingMaskType.black, // Prevents taps outside
         indicator: LoadingAnimationWidget.stretchedDots(
           size: 30,
           color: Colors.white,
         ),
       );
 
-      // Call login API
+      // --- Step 5.2: Call login function from AuthService ---
       await _authService.login(context, email, password);
 
-      // Prevent further UI updates if widget is disposed
+      // --- Step 5.3: Prevent crash if widget is disposed ---
       if (!mounted) return;
 
-      // Navigate to main app screen on successful login
+      // --- Step 5.4: Navigate to Main App Screen ---
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const AppMainScreen()),
       );
     } catch (e) {
+      // --- Step 5.5: Handle error cases ---
       if (!mounted) return;
 
-      // Handle custom Failure exceptions
       if (e is Failure) {
+        // Custom Failure error → Show message from Failure class
         showSnackBar(context, e.message.toString());
       } else {
-        // Generic error handling
+        // Any other exception → Show generic message
         showSnackBar(context, 'Unexpected error');
       }
     } finally {
-      // Hide loading indicator regardless of success or error
+      // --- Step 5.6: Hide loading animation ---
       EasyLoading.dismiss();
     }
   }
@@ -85,17 +93,18 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      /// Page body is scrollable to avoid overflow on small screens
+      /// --- Step 6: Wrap Body in SingleChildScrollView ---
+      /// Prevents overflow when keyboard appears on smaller devices.
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(15),
           child: Form(
-            key: _formKey, // attach form key for validation
+            key: _formKey, // Attach form validation key here
             child: Column(
               children: [
                 const SizedBox(height: 20),
 
-                /// --- Top illustration image ---
+                /// --- Step 7: Display Illustration Image ---
                 Image.asset(
                   'assets/images/loginIllustration.png',
                   height: 300,
@@ -104,7 +113,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Email input field ---
+                /// --- Step 8: Email Input Field ---
+                /// Includes validation for empty value & proper email format.
                 TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -113,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       return 'Please enter email';
                     }
 
-                    // Regex for email format
+                    // Regex validation for email format
                     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                     if (!emailRegex.hasMatch(value)) {
                       return 'Please enter a valid email';
@@ -128,10 +138,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Password input field ---
+                /// --- Step 9: Password Input Field ---
+                /// Includes validation for minimum length & toggle visibility.
                 TextFormField(
                   controller: passwordController,
-                  obscureText: isPasswordHidden, // toggle hide/show password
+                  obscureText: isPasswordHidden, // Toggle hide/show
                   keyboardType: TextInputType.visiblePassword,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -147,8 +158,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       onPressed: () {
+                        // Toggle visibility when eye icon tapped
                         setState(() {
-                          // Toggle password visibility
                           isPasswordHidden = !isPasswordHidden;
                         });
                       },
@@ -160,11 +171,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+
+                /// --- Step 10: Forgot Password Link ---
                 SizedBox(height: 5),
                 Align(
                   alignment: AlignmentGeometry.centerRight,
                   child: InkWell(
                     onTap: () {
+                      // Navigate to ForgotPassword screen
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -180,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Login button ---
+                /// --- Step 11: Login Button ---
                 SizedBox(
                   width: double.maxFinite,
                   child: AuthButtonWidget(
@@ -195,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Signup navigation text ---
+                /// --- Step 12: Navigate to Signup Screen ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

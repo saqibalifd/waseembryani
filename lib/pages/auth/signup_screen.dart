@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/utils/failure.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/widgets/auth_button_widget.dart';
 import 'package:waseembrayani/utils/snackbar.dart';
@@ -22,27 +22,27 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  /// --- Form key for validation ---
+  /// Step 1: Form key for validating all input fields
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  /// --- Controllers for input fields ---
+  /// Step 2: Text controllers to read user input
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  /// --- AuthService instance ---
+  /// Step 3: Create instance of AuthService to handle signup logic
   final AuthService _authService = AuthService();
 
-  /// --- To toggle password visibility ---
+  /// Step 4: Flag to toggle password visibility (show/hide password)
   bool isPasswordHidden = true;
 
-  /// Signup function
-  /// 1. Validates form inputs
-  /// 2. Shows loading animation
-  /// 3. Calls AuthService.signUp
-  /// 4. On success → Navigate to LoginScreen
-  /// 5. On error → Show snackbar with error message
+  /// Step 5: Signup method
+  /// - Reads values from text controllers
+  /// - Shows loading animation
+  /// - Calls AuthService.signUp
+  /// - On success → Navigates to LoginScreen
+  /// - On error → Displays snackbar with error message
   Future<void> _signUp() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -50,7 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
     final address = addressController.text.trim();
 
     try {
-      // Show loading spinner while signup request is running
+      // Step 5.1: Show loading spinner while request is in progress
       EasyLoading.show(
         maskType: EasyLoadingMaskType.black,
         indicator: LoadingAnimationWidget.stretchedDots(
@@ -59,7 +59,7 @@ class _SignupScreenState extends State<SignupScreen> {
         ),
       );
 
-      // Call signup API
+      // Step 5.2: Call AuthService to perform signup
       await _authService.signUp(
         context: context,
         email: email,
@@ -68,23 +68,23 @@ class _SignupScreenState extends State<SignupScreen> {
         adress: address,
       );
 
+      // Step 5.3: If widget is still active, navigate to login screen
       if (!mounted) return;
-
-      // Navigate to LoginScreen on successful signup
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     } catch (e) {
-      // Handle custom failure error
+      // Step 5.4: Handle errors
       if (e is Failure) {
+        // Custom failure error message
         showSnackBar(context, e.message.toString());
       } else {
-        // Fallback error
+        // Fallback generic error message
         showSnackBar(context, 'Unexpected error');
       }
     } finally {
-      // Always dismiss loader after process ends
+      // Step 5.5: Always dismiss loading animation
       EasyLoading.dismiss();
     }
   }
@@ -94,7 +94,7 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      /// Scrollable layout → prevents overflow on small screens
+      /// Step 6: Use SingleChildScrollView to prevent overflow on smaller screens
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(15),
@@ -102,7 +102,7 @@ class _SignupScreenState extends State<SignupScreen> {
             key: _formKey,
             child: Column(
               children: [
-                /// --- Top illustration image ---
+                /// Step 7: Show top illustration image
                 Image.asset(
                   'assets/images/signupIllustration.png',
                   height: 250,
@@ -111,7 +111,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Name field ---
+                /// Step 8: Name input field with validation
                 TextFormField(
                   controller: nameController,
                   keyboardType: TextInputType.name,
@@ -128,7 +128,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Email field ---
+                /// Step 9: Email input field with regex validation
                 TextFormField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -136,8 +136,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     if (value == '' || value!.isEmpty) {
                       return 'Please enter email';
                     }
-
-                    // Regex validation for email format
+                    // Simple regex for email format validation
                     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                     if (!emailRegex.hasMatch(value)) {
                       return 'Please enter a valid email';
@@ -151,7 +150,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Address field ---
+                /// Step 10: Address input field
                 TextFormField(
                   controller: addressController,
                   keyboardType: TextInputType.streetAddress,
@@ -168,10 +167,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Password field ---
+                /// Step 11: Password input field with show/hide toggle
                 TextFormField(
                   controller: passwordController,
-                  obscureText: isPasswordHidden,
+                  obscureText: isPasswordHidden, // toggle visibility
                   keyboardType: TextInputType.visiblePassword,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -187,8 +186,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       onPressed: () {
+                        // Toggle visibility on eye icon tap
                         setState(() {
-                          // Toggle password visibility
                           isPasswordHidden = !isPasswordHidden;
                         });
                       },
@@ -202,12 +201,12 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                /// --- Signup button ---
+                /// Step 12: Signup button
                 SizedBox(
                   width: double.maxFinite,
                   child: AuthButtonWidget(
                     onTap: () {
-                      // Validate form before calling signup
+                      // Validate all fields before signup
                       if (_formKey.currentState!.validate()) {
                         _signUp();
                       }
@@ -218,7 +217,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 const SizedBox(height: 20),
 
-                /// --- Redirect to login ---
+                /// Step 13: Redirect user to login screen if already registered
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -228,7 +227,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // Navigate to login screen
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(

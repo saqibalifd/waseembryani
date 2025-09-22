@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
+import 'package:waseembrayani/utils/consts.dart';
 
 class BackButtonWidget extends StatelessWidget {
   final VoidCallback onTap;

@@ -5,18 +5,19 @@ import 'package:iconsax/iconsax.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:persistent_shopping_cart/model/cart_model.dart';
 import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
-import 'package:waseembrayani/core/models/product_model.dart';
-import 'package:waseembrayani/core/models/user_model.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/core/utils/failure.dart';
+import 'package:waseembrayani/models/product_model.dart';
+import 'package:waseembrayani/models/user_model.dart';
 import 'package:waseembrayani/pages/user/app_main_screen.dart';
 import 'package:waseembrayani/pages/user/detail_screen.dart';
 import 'package:waseembrayani/service/orders_services.dart';
 import 'package:waseembrayani/service/user_services.dart';
+import 'package:waseembrayani/utils/consts.dart';
+import 'package:waseembrayani/utils/failure.dart';
 import 'package:waseembrayani/widgets/cart_tile.dart';
 import 'package:waseembrayani/widgets/material_button_widget.dart';
 import 'package:waseembrayani/utils/snackbar.dart';
 
+// --------------------- CART SCREEN ---------------------
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -25,11 +26,13 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  // Step 1: Local variables
   double totalPrice = PersistentShoppingCart().calculateTotalPrice();
   final int totalProduct = 0;
   final UserServices _userServices = UserServices();
   final OrderService _ordersServices = OrderService();
 
+  // Step 2: Controllers for bottom sheet form fields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -40,14 +43,15 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
+    // Step 3: Load user info (name, email, address) from API
     _loadUserInfo();
   }
 
+  // Step 4: Fetch user info and prefill form fields
   void _loadUserInfo() async {
     final List<UserModel> users = await _userServices.fetchUserInfo();
-
     if (users.isNotEmpty) {
-      final userinfo = users.first; // take first user
+      final userinfo = users.first;
       setState(() {
         _nameController.text = userinfo.name ?? "";
         _emailController.text = userinfo.email ?? "";
@@ -56,12 +60,14 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
+  // Step 5: Confirm order API call
   Future<void> _confirmOrder(
     List<PersistentShoppingCartItem> cartItems,
     int totalItems,
     double totalPrice,
   ) async {
     try {
+      // Show loading animation
       EasyLoading.show(
         maskType: EasyLoadingMaskType.black,
         indicator: LoadingAnimationWidget.stretchedDots(
@@ -70,6 +76,7 @@ class _CartScreenState extends State<CartScreen> {
         ),
       );
 
+      // Call order API
       await _ordersServices.placeOrder(
         username: _nameController.text.trim(),
         email: _emailController.text.trim(),
@@ -79,6 +86,7 @@ class _CartScreenState extends State<CartScreen> {
         totalPrice: totalPrice,
       );
 
+      // Clear cart and redirect to Home
       Navigator.pop(context);
       PersistentShoppingCart().clearCart();
       setState(() {
@@ -88,15 +96,18 @@ class _CartScreenState extends State<CartScreen> {
         context,
         MaterialPageRoute(builder: (context) => AppMainScreen(getIndex: 0)),
       );
+
+      // Show success snackbar
       showSnackBar(context, '🎉 Order Placed Successfully!');
     } catch (e) {
-      print('**********${e.toString()}*****************');
+      // Handle API or other errors
       if (e is Failure) {
         showSnackBar(context, e.message.toString());
       } else {
         showSnackBar(context, 'Unexpected error');
       }
     } finally {
+      // Hide loading
       EasyLoading.dismiss();
     }
   }
@@ -105,6 +116,8 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
+      // Step 6: AppBar
       appBar: AppBar(
         centerTitle: true,
         forceMaterialTransparency: true,
@@ -114,8 +127,11 @@ class _CartScreenState extends State<CartScreen> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
+
+      // Step 7: Main UI body
       body: Column(
         children: [
+          // Cart Items list (managed by persistent_shopping_cart package)
           PersistentShoppingCart().showCartItems(
             cartItemsBuilder:
                 (
@@ -130,8 +146,11 @@ class _CartScreenState extends State<CartScreen> {
                       itemCount: cartItems.length,
                       itemBuilder: (context, index) {
                         final item = cartItems[index];
+
+                        // Step 8: Each cart item as a SwipeActionCell (delete supported)
                         return InkWell(
                           onTap: () {
+                            // Navigate to product detail page on tap
                             final ProductModel productModel = ProductModel(
                               id: int.parse(item.productId),
                               name: item.productName,
@@ -142,7 +161,6 @@ class _CartScreenState extends State<CartScreen> {
                               isPopular: false,
                               isRecommended: false,
                             );
-
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -152,6 +170,7 @@ class _CartScreenState extends State<CartScreen> {
                             );
                           },
                           child: SwipeActionCell(
+                            // Delete option on swipe
                             trailingActions: <SwipeAction>[
                               SwipeAction(
                                 color: Colors.transparent,
@@ -170,6 +189,7 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                             ],
                             key: ObjectKey(item.productId),
+                            // Step 9: CartTile widget (with quantity add/remove)
                             child: CartTile(
                               imageUrl: item.productThumbnail.toString(),
                               productName: item.productName,
@@ -209,6 +229,8 @@ class _CartScreenState extends State<CartScreen> {
                   );
                 },
           ),
+
+          // Step 10: Payment details & Place Order button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
             child: paymentDetail(
@@ -243,7 +265,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  /// Bottom sheet for order details
+  // --------------------- Bottom Sheet ---------------------
   void _showOrderBottomSheet(
     BuildContext context,
     List<PersistentShoppingCartItem> cartItems,
@@ -276,6 +298,7 @@ class _CartScreenState extends State<CartScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Handle bar at top of sheet
                       Center(
                         child: Container(
                           height: 5,
@@ -295,6 +318,7 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
+                      // Step 11: Input fields
                       _buildField("Name", Iconsax.user, _nameController),
                       _buildField(
                         "Email",
@@ -315,6 +339,7 @@ class _CartScreenState extends State<CartScreen> {
                         _additionlNotesController,
                       ),
                       const SizedBox(height: 30),
+                      // Confirm Order button
                       MaterialButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
@@ -347,7 +372,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  /// Reusable input field
+  // --------------------- Reusable Input Field ---------------------
   Widget _buildField(
     String hint,
     IconData icon,
@@ -384,6 +409,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 }
 
+// --------------------- Payment Summary Widget ---------------------
 Widget paymentDetail(
   String total, {
   String shippingCharges = '0',
@@ -417,6 +443,7 @@ Widget paymentDetail(
   );
 }
 
+// --------------------- Helper Row Widget ---------------------
 Widget _buildRow(String title, String value, {bool isGrand = false}) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,

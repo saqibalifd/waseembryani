@@ -1,39 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:waseembrayani/pages/user/home_screen.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
+import 'package:waseembrayani/utils/consts.dart';
 
+/// Onboarding Screen
+/// ✅ Shows a welcome illustration with background + chef image
+/// ✅ Includes title + subtitle
+/// ✅ Provides "Get Started" button to navigate to HomeScreen
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Get the device screen size for responsive UI
+    // Step 1: Get device screen size for responsive layout
     Size size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Background container with repeating image
+          /// Step 2: Background container with food illustration
           Container(
             height: size.height,
             width: size.width,
-            color: imageBackground, // background color from consts
+            color: imageBackground, // background color from consts.dart
             child: Image.asset(
               'assets/images/foodbackground.png',
-              color: imageBackground2, // applies a tint color
-              repeat: ImageRepeat.repeatY, // repeats vertically
+              color: imageBackground2, // apply overlay tint color
+              repeat: ImageRepeat.repeatY, // repeat vertically
             ),
           ),
 
-          // Chef image positioned at the top
+          /// Step 3: Top illustration (Chef image)
           Positioned(
-            top: 80,
+            top: 80, // place 80px from top
             left: 0,
             right: 0,
             child: Image.asset('assets/images/cheaf.png'),
           ),
 
-          // Bottom container with white background
+          /// Step 4: Bottom container with white background
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
@@ -48,7 +52,7 @@ class OnboardingScreen extends StatelessWidget {
                   crossAxisAlignment:
                       CrossAxisAlignment.center, // center horizontally
                   children: [
-                    // Title text with two colors (black + red)
+                    /// Step 4.1: Title text (black + red rich text)
                     RichText(
                       textAlign: TextAlign.center,
                       text: TextSpan(
@@ -75,7 +79,7 @@ class OnboardingScreen extends StatelessWidget {
 
                     SizedBox(height: 20),
 
-                    // Subtitle text
+                    /// Step 4.2: Subtitle text
                     Text(
                       textAlign: TextAlign.center,
                       'Our job is to filling your tummy with delisius food and fast delivery.',
@@ -83,7 +87,7 @@ class OnboardingScreen extends StatelessWidget {
 
                     SizedBox(height: 20),
 
-                    // "Get Started" button
+                    /// Step 4.3: "Get Started" button
                     MaterialButton(
                       onPressed: () {
                         // Navigate to HomeScreen when pressed
@@ -92,7 +96,7 @@ class OnboardingScreen extends StatelessWidget {
                           MaterialPageRoute(builder: (context) => HomeScreen()),
                         );
                       },
-                      color: red, // button background color
+                      color: red, // button color from consts
                       height: 65,
                       minWidth: 250,
                       shape: RoundedRectangleBorder(
@@ -115,12 +119,3 @@ class OnboardingScreen extends StatelessWidget {
     );
   }
 }
-
-// Example of how you could create a custom clipper if needed
-// class CustomClip extends CustomClipper<Path> {
-//   @override
-//   Path getClip(Size size) {
-//     // Define custom clipping path here
-//     throw UnimplementedError();
-//   }
-// }

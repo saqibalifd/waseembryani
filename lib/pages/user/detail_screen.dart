@@ -3,9 +3,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:persistent_shopping_cart/model/cart_model.dart';
 import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:readmore/readmore.dart';
-import 'package:waseembrayani/core/models/product_model.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
+import 'package:waseembrayani/models/product_model.dart';
 import 'package:waseembrayani/pages/user/app_main_screen.dart';
+import 'package:waseembrayani/utils/consts.dart';
 import 'package:waseembrayani/widgets/back_button_widget.dart';
 import 'package:waseembrayani/utils/snackbar.dart';
 
@@ -19,36 +19,39 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
+  // keep track of product quantity
   int quantity = 1;
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
+    Size size = MediaQuery.of(context).size; // screen size
 
     return Scaffold(
       body: Stack(
         children: [
-          // Background
+          // 🔹 Background container for the whole screen
           Container(
             height: size.height,
             width: size.width,
             color: imageBackground,
           ),
 
-          // Top Bar
+          // 🔹 Top bar with back button and cart icon
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Back Button
+                  // back button widget
                   BackButtonWidget(onTap: () => Navigator.pop(context)),
-                  // More Icon
+
+                  // cart icon with badge showing number of items
                   Stack(
                     children: [
                       GestureDetector(
                         onTap: () {
+                          // navigate to cart screen inside AppMainScreen
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -63,9 +66,12 @@ class _DetailScreenState extends State<DetailScreen> {
                             borderRadius: BorderRadius.circular(10),
                             color: red.withValues(alpha: .1),
                           ),
-                          child: Center(child: Icon(Iconsax.shopping_cart)),
+                          child: const Center(
+                            child: Icon(Iconsax.shopping_cart),
+                          ),
                         ),
                       ),
+                      // badge that displays cart item count
                       Positioned(
                         right: 0,
                         top: 0,
@@ -77,7 +83,7 @@ class _DetailScreenState extends State<DetailScreen> {
                               backgroundColor: red,
                               child: Text(
                                 cartItems.length.toString(),
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 10,
                                   color: Colors.white,
                                 ),
@@ -93,7 +99,7 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ),
 
-          // Product Info Sheet
+          // 🔹 Bottom sheet with product details
           Positioned(
             bottom: 0,
             left: 0,
@@ -112,7 +118,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   children: [
                     const SizedBox(height: 130),
 
-                    // Quantity Selector
+                    // 🔹 Quantity selector (increment/decrement)
                     Container(
                       height: 50,
                       width: 100,
@@ -123,13 +129,12 @@ class _DetailScreenState extends State<DetailScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Decrease Quantity
+                          // decrease quantity
                           GestureDetector(
                             onTap: () {
                               if (quantity > 1) {
                                 setState(() {
                                   quantity--;
-                                  print(quantity);
                                 });
                               }
                             },
@@ -138,6 +143,7 @@ class _DetailScreenState extends State<DetailScreen> {
                               color: Colors.white,
                             ),
                           ),
+                          // display current quantity
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: Text(
@@ -145,12 +151,11 @@ class _DetailScreenState extends State<DetailScreen> {
                               style: const TextStyle(color: Colors.white),
                             ),
                           ),
-                          // Increase Quantity
+                          // increase quantity
                           GestureDetector(
                             onTap: () {
                               setState(() {
                                 quantity++;
-                                print(quantity);
                               });
                             },
                             child: const Icon(Icons.add, color: Colors.white),
@@ -161,11 +166,11 @@ class _DetailScreenState extends State<DetailScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Product Name & Price
+                    // 🔹 Product name, category, and price
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Name & Category
+                        // left: product name + category
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -183,7 +188,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             ),
                           ],
                         ),
-                        // Price
+                        // right: product price
                         Text(
                           'Rs. ${widget.productModel.price}',
                           style: const TextStyle(
@@ -196,7 +201,7 @@ class _DetailScreenState extends State<DetailScreen> {
 
                     const SizedBox(height: 10),
 
-                    // Description
+                    // 🔹 Product description with "Read more"
                     ReadMoreText(
                       widget.productModel.description,
                       trimLines: 3,
@@ -222,7 +227,7 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
           ),
 
-          // Product Image
+          // 🔹 Product image (above the details sheet)
           Positioned(
             top: 130,
             left: 0,
@@ -237,14 +242,16 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ],
       ),
-      // add to cart button
+
+      // 🔹 Add to Cart button at bottom
       floatingActionButton: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14),
         child: SizedBox(
           width: double.infinity,
-          height: 60, // same as your bottom button
+          height: 60,
           child: FloatingActionButton.extended(
             onPressed: () async {
+              // add product with quantity to persistent cart
               await PersistentShoppingCart().addToCart(
                 PersistentShoppingCartItem(
                   productId: widget.productModel.id.toString(),
@@ -255,6 +262,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   productThumbnail: widget.productModel.imageUrl,
                 ),
               );
+              // show snackbar after adding
               showSnackBar(context, 'Added to your cart!');
             },
             backgroundColor: red,

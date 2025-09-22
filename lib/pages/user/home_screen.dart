@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:waseembrayani/core/models/categories_model.dart';
-import 'package:waseembrayani/core/models/product_model.dart';
-import 'package:waseembrayani/core/models/user_model.dart';
+import 'package:waseembrayani/models/categories_model.dart';
+import 'package:waseembrayani/models/product_model.dart';
+import 'package:waseembrayani/models/user_model.dart';
 import 'package:waseembrayani/pages/user/app_main_screen.dart';
 import 'package:waseembrayani/pages/user/view_all_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/service/categories_services.dart';
 import 'package:waseembrayani/service/product_services.dart';
 import 'package:waseembrayani/service/user_services.dart';
+import 'package:waseembrayani/utils/consts.dart';
+import 'package:waseembrayani/utils/product_card.dart';
 import 'package:waseembrayani/widgets/banner_card.dart';
 import 'package:waseembrayani/widgets/categories_card.dart';
-import 'package:waseembrayani/widgets/product_card.dart';
 import 'package:waseembrayani/widgets/shimmer/categoris_card_shimmer.dart';
 import 'package:waseembrayani/widgets/shimmer/product_grid_card_shimmer.dart';
 import 'package:waseembrayani/widgets/shimmer/product_horizontal_cardShimmer.dart';
 
 /// Home Screen of the app.
-/// Displays banner, categories, popular products, and all products.
+/// Displays:
+/// - Banner
+/// - Categories
+/// - Popular products
+/// - All products
+/// Supports favourites and navigation to ViewAllScreen.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -28,42 +33,45 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  /// --- Services for API Calls ---
+  /// --- Step 1: Setup Services for API calls ---
   final CategoriesServices _categoriesServices = CategoriesServices();
   final ProductServices _productServices = ProductServices();
   final UserServices _userServices = UserServices();
 
-  /// --- Future variables to fetch data ---
+  /// --- Step 2: Setup Future variables to fetch data ---
+  /// These will be used with FutureBuilder
   late Future<List<CategoryModel>> futureCategories = _categoriesServices
       .fetchCategories();
   late Future<List<ProductModel>> futureFoodProducts = Future.value([]);
   late Future<List<ProductModel>> futurePopularProducts = Future.value([]);
   late Future<List<UserModel>> futureUserInfo = Future.value([]);
 
-  /// --- State variables ---
-  List<CategoryModel> categories = []; // list of all categories
+  /// --- Step 3: State variables ---
+  List<CategoryModel> categories = []; // store categories
   String? slectedCategorie; // currently selected category
-  final bool? isAdmin = false; // check if user is admin
+  final bool? isAdmin = false; // admin flag (used for heading button)
   final String userId = Supabase.instance.client.auth.currentUser!.id
-      .toString(); // logged in user id
+      .toString(); // current logged in user id
 
   @override
   void initState() {
     super.initState();
-    _intilizeData(); // fetch categories, products, and user info
+    _intilizeData(); // Step 4: Initialize data
   }
 
-  /// Initialize categories, products, and user info
+  /// Step 4a: Initialize categories, products, and user info
+  /// - Fetch categories
+  /// - Select the first category by default
+  /// - Fetch products based on that category
   void _intilizeData() async {
     try {
       final categories = await futureCategories;
       if (categories.isNotEmpty) {
         setState(() {
           this.categories = categories;
-          slectedCategorie =
-              categories.first.name; // select first category by default
+          slectedCategorie = categories.first.name;
 
-          // Fetch products based on the first category
+          // Fetch products for default category
           futureFoodProducts = _productServices.fetchFoodProducts(
             slectedCategorie!,
           );
@@ -78,7 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Add product to favourite table in Supabase
+  /// Step 5: Add product to favourite table in Supabase
+  /// - Shows EasyLoading spinner
+  /// - Inserts product JSON in "favourite"
   Future addToFavourite(ProductModel productModel) async {
     try {
       EasyLoading.show(status: 'loading...');
@@ -96,7 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Check if a product is already in favourites for current user
+  /// Step 6: Check if product already exists in favourites
+  /// - Uses currentUser id + product id
   Future<bool> checkIsFavourite(int productId) async {
     try {
       final String userId = Supabase.instance.client.auth.currentUser!.id;
@@ -115,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// AuthService instance for logout or auth checks if needed
   AuthService authService = AuthService();
 
   @override
@@ -122,13 +134,15 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
 
-      /// Custom AppBar (shows user info if available)
+      /// Step 7: Custom AppBar
+      /// - Shows user address and profile if logged in
+      /// - Otherwise shows default app bar
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: _buildAppBar(),
       ),
 
-      /// Body with scrollable content
+      /// Step 8: Scrollable body with multiple sections
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
@@ -136,13 +150,13 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const SizedBox(height: 30),
 
-            /// --- Banner section ---
+            /// Banner section
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: BannerCard(
                 firstText: 'The Fastest In Delivery',
                 secondText: ' Food',
-                button: _orderNowButton(),
+                button: _orderNowButton(), // CTA → ViewAllScreen
                 image: Image.asset(
                   'assets/images/3drider.webp',
                   height: 110,
@@ -151,11 +165,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            /// --- Categories section ---
+            /// Categories section
             _heading('Categories', false, () {}, isAdmin: isAdmin),
             _buildCategoriesList(),
 
-            /// --- Popular products ---
+            /// Popular products section
             _heading('Popular Now', true, () {
               Navigator.push(
                 context,
@@ -169,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
             }),
             _buildPopularProducts(),
 
-            /// --- All products ---
+            /// All products section
             _heading('All Products', true, () {
               Navigator.push(
                 context,
@@ -190,7 +204,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// ---------------- Widgets ----------------
 
-  /// "Order Now" button inside the banner
+  /// Step 9: "Order Now" button inside banner
+  /// - Navigates to ViewAllScreen with all products
   Widget _orderNowButton() {
     return MaterialButton(
       onPressed: () {
@@ -210,7 +225,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Build AppBar (shows user address and profile pic if logged in)
+  /// Step 10: Build AppBar dynamically with FutureBuilder
+  /// - Shows user data if available
   Widget _buildAppBar() {
     return FutureBuilder(
       future: futureUserInfo,
@@ -220,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
             snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty;
 
         if (isLoading || hasError) {
-          return _defaultAppBar();
+          return _defaultAppBar(); // fallback
         }
 
         final data = snapshot.data!.first;
@@ -243,6 +259,7 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             GestureDetector(
               onTap: () {
+                // Navigate to profile tab in AppMainScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -258,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Default AppBar (used when user data is not available)
+  /// Step 11: Default AppBar when user data is unavailable
   AppBar _defaultAppBar() {
     return AppBar(
       leading: _appLogo(),
@@ -278,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// App logo on the left side of AppBar
+  /// Step 12: Logo widget for AppBar
   Widget _appLogo() {
     return Padding(
       padding: const EdgeInsets.only(left: 10),
@@ -290,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Profile avatar on right side of AppBar
+  /// Step 13: Profile avatar widget (with placeholder if no image)
   Widget _profileAvatar(String? profileImage) {
     if (profileImage == null || profileImage.isEmpty) {
       return const Padding(
@@ -312,7 +329,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Categories horizontal list
+  /// Step 14: Horizontal list of categories
+  /// - Updates food + popular products on selection
   Widget _buildCategoriesList() {
     return Padding(
       padding: const EdgeInsets.only(left: 20),
@@ -340,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      // Update products when category is changed
+                      // Step 14a: update products when category changes
                       slectedCategorie = category.name;
                       futureFoodProducts = _productServices.fetchFoodProducts(
                         category.name,
@@ -366,7 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Horizontal list of popular products
+  /// Step 15: Horizontal list of popular products
+  /// - Wraps product card with favourite check
   Widget _buildPopularProducts() {
     return Padding(
       padding: const EdgeInsets.only(left: 20),
@@ -399,7 +418,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Grid of all products (based on selected category)
+  /// Step 16: Grid of all products for selected category
+  /// - Uses shimmer while loading
   Widget _buildAllProducts() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -407,11 +427,11 @@ class _HomeScreenState extends State<HomeScreen> {
         future: futureFoodProducts,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // Show shimmer while loading
+            // Shimmer for loading
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: 6, // placeholder shimmer count
+              itemCount: 6, // shimmer placeholder
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: .6,
@@ -441,7 +461,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Wrapper for product card with favourite check
+  /// Step 17: Wrapper to check favourite status for a product
+  /// - Uses FutureBuilder<bool>
+  /// - Passes `isFavourite` into ProductCard
   Widget _favouriteWrapper(ProductModel product) {
     return FutureBuilder<bool>(
       future: checkIsFavourite(product.id),
@@ -451,7 +473,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isFavourite: isFav,
           onTap: () {
             setState(() {
-              addToFavourite(product);
+              addToFavourite(product); // add product to favourites
             });
           },
           productModel: product,
@@ -462,6 +484,10 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 /// ---------------- Reusable Heading Widget ----------------
+/// Step 18: Used in sections (Categories, Popular, All products)
+/// - Shows title
+/// - If isAdmin → shows add button
+/// - Otherwise shows "View All"
 Widget _heading(
   String title,
   bool? isMoreButton,
@@ -479,7 +505,7 @@ Widget _heading(
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
 
-        /// "View All" button OR "Add" button for admin
+        /// Right-side button
         if (isMoreButton == true)
           isAdmin == true
               ? GestureDetector(
@@ -521,3 +547,15 @@ Widget _heading(
     ),
   );
 }
+
+/// ---------------- Final Checklist ----------------
+/// 1. Setup services and Future variables.
+/// 2. Initialize categories, products, user info in initState.
+/// 3. Build custom AppBar (dynamic with user info).
+/// 4. Add banner section with CTA button.
+/// 5. Show categories with horizontal scroll and selection.
+/// 6. Show popular products horizontally with favourite check.
+/// 7. Show all products grid with favourite check.
+/// 8. Wrap ProductCard with _favouriteWrapper for add-to-fav feature.
+/// 9. Reusable _heading widget for sections.
+/// 10. Future improvement: Add removeFromFavourite to toggle instead of only add.
