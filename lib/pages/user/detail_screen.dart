@@ -5,9 +5,9 @@ import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:readmore/readmore.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/pages/screens/app_main_screen.dart';
+import 'package:waseembrayani/pages/user/app_main_screen.dart';
 import 'package:waseembrayani/widgets/back_button_widget.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 
 class DetailScreen extends StatefulWidget {
   final ProductModel productModel;
@@ -237,36 +237,38 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
         ],
       ),
-
-      // Add to Cart Button
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: MaterialButton(
-          onPressed: () async {
-            await PersistentShoppingCart().addToCart(
-              PersistentShoppingCartItem(
-                productId: widget.productModel.id.toString(),
-                productName: widget.productModel.name,
-                unitPrice: widget.productModel.price,
-                quantity: quantity,
-                productDescription: widget.productModel.description,
-                productThumbnail: widget.productModel.imageUrl,
-              ),
-            );
-            showSnackBar(context, 'Added to your cart!');
-          },
-          color: red,
-          height: 60,
-          minWidth: double.infinity,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: const Text(
-            'Add to Cart',
-            style: TextStyle(fontSize: 16, color: Colors.white),
+      // add to cart button
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: SizedBox(
+          width: double.infinity,
+          height: 60, // same as your bottom button
+          child: FloatingActionButton.extended(
+            onPressed: () async {
+              await PersistentShoppingCart().addToCart(
+                PersistentShoppingCartItem(
+                  productId: widget.productModel.id.toString(),
+                  productName: widget.productModel.name,
+                  unitPrice: widget.productModel.price,
+                  quantity: quantity,
+                  productDescription: widget.productModel.description,
+                  productThumbnail: widget.productModel.imageUrl,
+                ),
+              );
+              showSnackBar(context, 'Added to your cart!');
+            },
+            backgroundColor: red,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            label: const Text(
+              'Add to Cart',
+              style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

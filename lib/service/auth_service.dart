@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/service/user_services.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 
 class AuthService {
   final supabaseClient = Supabase.instance.client;

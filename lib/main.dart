@@ -4,7 +4,7 @@ import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
 
-import 'package:waseembrayani/pages/screens/app_main_screen.dart';
+import 'package:waseembrayani/pages/user/app_main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

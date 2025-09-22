@@ -3,8 +3,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/service/auth_service.dart';
-import 'package:waseembrayani/widgets/mybutton_widget.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/widgets/auth_button_widget.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
 
 /// Signup Screen
@@ -205,7 +205,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 /// --- Signup button ---
                 SizedBox(
                   width: double.maxFinite,
-                  child: MybuttonWidget(
+                  child: AuthButtonWidget(
                     onTap: () {
                       // Validate form before calling signup
                       if (_formKey.currentState!.validate()) {

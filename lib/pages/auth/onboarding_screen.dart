@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:waseembrayani/pages/screens/home_screen.dart';
+import 'package:waseembrayani/pages/user/home_screen.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 
 class OnboardingScreen extends StatelessWidget {

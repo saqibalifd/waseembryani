@@ -7,10 +7,10 @@ import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/pages/auth/forgot_password_screen.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
-import 'package:waseembrayani/pages/screens/app_main_screen.dart';
+import 'package:waseembrayani/pages/user/app_main_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/service/user_services.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 
 class AccountSettingScreen extends StatefulWidget {
   const AccountSettingScreen({super.key});
@@ -396,7 +396,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
               ),
               const SizedBox(height: 20),
 
-              const Icon(Icons.image, color: Colors.blue, size: 60),
+              const Icon(Iconsax.image, color: Colors.blue, size: 60),
               const SizedBox(height: 15),
 
               const Text(
@@ -423,7 +423,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
                       onPressed: () {
                         _userServices.pickImageFromCamera();
                       },
-                      icon: const Icon(Icons.camera_alt),
+                      icon: const Icon(Iconsax.camera),
                       label: const Text("Camera"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
@@ -441,7 +441,7 @@ class _AccountSettingScreenState extends State<AccountSettingScreen> {
                       onPressed: () {
                         _userServices.pickImageFromGallery();
                       },
-                      icon: const Icon(Icons.photo_library),
+                      icon: const Icon(Iconsax.gallery),
                       label: const Text("Gallery"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,

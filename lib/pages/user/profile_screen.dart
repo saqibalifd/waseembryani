@@ -7,10 +7,10 @@ import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/pages/auth/login_screen.dart';
 import 'package:waseembrayani/pages/policies/privacy_policy_screen.dart';
 import 'package:waseembrayani/pages/policies/terms_conditions_screen.dart';
-import 'package:waseembrayani/pages/screens/account_setting_screen.dart';
+import 'package:waseembrayani/pages/user/account_setting_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/service/user_services.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -92,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         backgroundColor: Colors.grey,
                         radius: 50,
-                        child: Icon(Icons.person, size: 50),
+                        child: Icon(Icons.person_outline, size: 50),
                       ),
                       SizedBox(height: 15),
                       Text(
@@ -129,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ? CircleAvatar(
                             radius: 50,
                             backgroundColor: Colors.grey,
-                            child: Icon(Icons.person, size: 50),
+                            child: Icon(Icons.person_outline, size: 50),
                           )
                         : CircleAvatar(
                             radius: 50,

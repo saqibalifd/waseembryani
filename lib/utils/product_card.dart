@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/pages/screens/detail_screen.dart';
+import 'package:waseembrayani/pages/user/detail_screen.dart';
 
 class ProductCard extends ConsumerWidget {
   final ProductModel productModel;

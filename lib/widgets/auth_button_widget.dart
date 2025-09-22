@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 
-class MybuttonWidget extends StatelessWidget {
+class AuthButtonWidget extends StatelessWidget {
   final VoidCallback onTap;
   final String buttonText;
   final Color? color;
-  const MybuttonWidget({
+  const AuthButtonWidget({
     super.key,
     required this.onTap,
     required this.buttonText,

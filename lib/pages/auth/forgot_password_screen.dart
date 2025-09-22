@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
-import 'package:waseembrayani/pages/screens/app_main_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/widgets/back_button_widget.dart';
-import 'package:waseembrayani/widgets/mybutton_widget.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/widgets/auth_button_widget.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   final String? email;
@@ -122,7 +121,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 /// --- Login button ---
                 SizedBox(
                   width: double.maxFinite,
-                  child: MybuttonWidget(
+                  child: AuthButtonWidget(
                     onTap: () {
                       // Validate form before login
                       if (_formKey.currentState!.validate()) {

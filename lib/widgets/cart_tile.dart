@@ -27,7 +27,10 @@ class CartTile extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.all(10),
             width: double.infinity,
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.white,
+            ),
             child: Row(
               children: [
                 Container(

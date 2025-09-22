@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:waseembrayani/core/models/categories_model.dart';
 import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
-import 'package:waseembrayani/pages/screens/app_main_screen.dart';
-import 'package:waseembrayani/pages/screens/view_all_screen.dart';
+import 'package:waseembrayani/pages/user/app_main_screen.dart';
+import 'package:waseembrayani/pages/user/view_all_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/service/categories_services.dart';
@@ -298,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: CircleAvatar(
           backgroundColor: Colors.transparent,
           radius: 20,
-          child: Icon(Icons.person, size: 30),
+          child: Icon(Icons.person_outline, size: 30),
         ),
       );
     }

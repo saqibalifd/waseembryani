@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:persistent_shopping_cart/persistent_shopping_cart.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
-import 'package:waseembrayani/pages/screens/add_product_screen.dart';
-import 'package:waseembrayani/pages/screens/cart_screen.dart';
-import 'package:waseembrayani/pages/screens/home_screen.dart';
-import 'package:waseembrayani/pages/screens/profile_screen.dart';
+import 'package:waseembrayani/pages/screens/admin_home_screen.dart';
+import 'package:waseembrayani/pages/user/cart_screen.dart';
+import 'package:waseembrayani/pages/user/home_screen.dart';
+import 'package:waseembrayani/pages/user/profile_screen.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
-import 'package:waseembrayani/pages/screens/orders_screen.dart';
+import 'package:waseembrayani/pages/user/orders_screen.dart';
 import 'package:waseembrayani/service/user_services.dart';
 
 class AppMainScreen extends StatefulWidget {
@@ -109,7 +109,7 @@ class _AppMainScreenState extends State<AppMainScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AddProductScreen(),
+                          builder: (context) => AdminHomeScreen(),
                         ),
                       );
                     },

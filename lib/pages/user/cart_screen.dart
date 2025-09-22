@@ -9,13 +9,13 @@ import 'package:waseembrayani/core/models/product_model.dart';
 import 'package:waseembrayani/core/models/user_model.dart';
 import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
-import 'package:waseembrayani/pages/screens/app_main_screen.dart';
-import 'package:waseembrayani/pages/screens/detail_screen.dart';
+import 'package:waseembrayani/pages/user/app_main_screen.dart';
+import 'package:waseembrayani/pages/user/detail_screen.dart';
 import 'package:waseembrayani/service/orders_services.dart';
 import 'package:waseembrayani/service/user_services.dart';
 import 'package:waseembrayani/widgets/cart_tile.dart';
 import 'package:waseembrayani/widgets/material_button_widget.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});

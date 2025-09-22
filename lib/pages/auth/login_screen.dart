@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:waseembrayani/core/utils/consts.dart';
 import 'package:waseembrayani/core/utils/failure.dart';
 import 'package:waseembrayani/pages/auth/forgot_password_screen.dart';
 import 'package:waseembrayani/pages/auth/signup_screen.dart';
-import 'package:waseembrayani/pages/screens/app_main_screen.dart';
+import 'package:waseembrayani/pages/user/app_main_screen.dart';
 import 'package:waseembrayani/service/auth_service.dart';
-import 'package:waseembrayani/widgets/mybutton_widget.dart';
-import 'package:waseembrayani/widgets/snackbar.dart';
+import 'package:waseembrayani/widgets/auth_button_widget.dart';
+import 'package:waseembrayani/utils/snackbar.dart';
 
 /// Login Screen
 /// Allows user to login with email and password.
@@ -184,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 /// --- Login button ---
                 SizedBox(
                   width: double.maxFinite,
-                  child: MybuttonWidget(
+                  child: AuthButtonWidget(
                     onTap: () {
                       // Validate form before login
                       if (_formKey.currentState!.validate()) {
